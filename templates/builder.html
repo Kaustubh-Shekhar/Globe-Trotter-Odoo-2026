@@ -78,7 +78,7 @@
             {% endif %}
 
             <div>
-                <h3 style="margin:0">{{ stop.city.name }}, {{ stop.city.country }}</h3>
+                <h3 style="margin:0">{{ stop.city.name }}, {{ stop.city.region }}</h3>
                 <div class="meta-row">
                     <span class="badge">
                         Date range:
@@ -229,7 +229,7 @@
                 <select class="input" id="city_id" name="city_id" required>
                     <option value="">Select a place...</option>
                     {% for city in cities %}
-                        <option value="{{ city.id }}">{{ city.name }}, {{ city.country }}</option>
+                        <option value="{{ city.id }}">{{ city.name }} — {{ city.region }}</option>
                     {% endfor %}
                 </select>
             </div>

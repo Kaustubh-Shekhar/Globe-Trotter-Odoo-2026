@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trip.name }} — shared on GlobeTrotter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .share-hero {
+            position: relative; border-radius: var(--radius); overflow: hidden;
+            border: 1px solid var(--line); margin-bottom: 18px; min-height: 190px;
+            background: linear-gradient(135deg, var(--primary), #4a5b93);
+            display: flex; align-items: flex-end;
+        }
+        .share-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .share-hero .veil { position: absolute; inset: 0; background: rgba(26,31,54,.6); }
+        .share-hero .inner { position: relative; padding: 22px; color: #fff; width: 100%; }
+        .share-hero h1 { color: #fff; margin-bottom: 4px; }
+        .share-hero .by { opacity: .85; font-size: 13.5px; }
+
+        .stop-line { display: grid; grid-template-columns: 58px 1fr auto; gap: 14px; align-items: center; }
+        .stop-num {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--primary); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px;
+        }
+        .act-line { display: flex; justify-content: space-between; gap: 10px;
+                    padding: 6px 0; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; }
+        .act-line:last-child { border-bottom: none; }
+        .cost { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+        .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px; }
+        @media (max-width: 700px) { .cols { grid-template-columns: 1fr; } }
+        .pane { border: 1px solid var(--line-soft); border-radius: 6px; padding: 12px; }
+        .pane h4 { margin: 0 0 8px; font-size: 11.5px; text-transform: uppercase;
+                   letter-spacing: .05em; color: var(--muted); }
+        .total-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--primary); color: #fff;
+            border-radius: var(--radius); padding: 14px 18px; margin-top: 18px;
+        }
+        .total-bar .amount { font-size: 22px; font-weight: 700; }
+        .copy-cta { border: 1px dashed var(--accent); background: rgba(255,107,74,.05); }
+    </style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="/">GlobeTrotter</a>
+        <span class="badge badge-accent">Shared itinerary</span>
+        <span class="spacer"></span>
+        {% if viewer %}
+            <a href="/dashboard" class="muted" style="font-size:13px">My dashboard</a>
+        {% else %}
+            <a href="/" class="muted" style="font-size:13px">Log in</a>
+        {% endif %}
+    </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category or 'info' }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container">
+
+    <div class="share-hero">
+        {% if trip.cover_image %}
+            <img src="{{ trip.cover_image }}" alt="">
+            <div class="veil"></div>
+        {% endif %}
+        <div class="inner">
+            <h1>{{ trip.name }}</h1>
+            <div class="by">
+                Planned by {{ owner_name }}
+                {% if trip.start_date %}
+                    · {{ trip.start_date.strftime('%d %b %Y') }} — {{ trip.end_date.strftime('%d %b %Y') }}
+                {% endif %}
+                · {{ trip.days }} days · {{ stops|length }} cit{{ 'y' if stops|length == 1 else 'ies' }}
+            </div>
+        </div>
+    </div>
+
+    {% if trip.description %}
+        <p class="muted" style="margin:0 0 18px">{{ trip.description }}</p>
+    {% endif %}
+
+    {# ---------- copy this trip ---------- #}
+    <div class="card copy-cta" style="margin-bottom:18px">
+        <div class="spread">
+            <div>
+                <h3 style="margin:0 0 2px">Like this plan?</h3>
+                <p class="muted" style="margin:0">
+                    Copy every city, activity and cost into your own account, then edit freely.
+                </p>
+            </div>
+            {% if viewer %}
+                <form method="POST" action="{{ url_for('share.copy_trip', token=trip.share_token) }}">
+                    <button class="btn btn-accent" type="submit">Copy this trip</button>
+                </form>
+            {% else %}
+                <a class="btn btn-accent" href="/">Log in to copy</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ---------- the itinerary ---------- #}
+    {% for stop in stops %}
+        <div class="section">
+            <span class="section-title">Stop {{ loop.index }}</span>
+
+            <div class="stop-line">
+                <div class="stop-num">{{ loop.index }}</div>
+                <div>
+                    <h3 style="margin:0">{{ stop.city.name }}</h3>
+                    <span class="muted">
+                        {{ stop.city.region }}
+                        {% if stop.start_date %}
+                            · {{ stop.start_date.strftime('%d %b') }} —
+                            {{ stop.end_date.strftime('%d %b') if stop.end_date else '?' }}
+                            · {{ stop.nights }} nights
+                        {% endif %}
+                    </span>
+                </div>
+                <span class="badge badge-accent">₹{{ "{:,.0f}".format(stop_totals[stop.id]) }}</span>
+            </div>
+
+            <div class="cols">
+                <div class="pane">
+                    <h4>Activities</h4>
+                    {% if stop.trip_activities %}
+                        {% for ta in stop.trip_activities %}
+                            <div class="act-line">
+                                <span>
+                                    {{ ta.name }}
+                                    {% if ta.date %}<span class="muted">· {{ ta.date.strftime('%d %b') }}</span>{% endif %}
+                                </span>
+                                <span class="cost">₹{{ "{:,.0f}".format(ta.cost or 0) }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="muted" style="margin:0">Nothing scheduled.</p>
+                    {% endif %}
+                </div>
+
+                <div class="pane">
+                    <h4>Transport / Stay / Food</h4>
+                    {% if stop_expenses[stop.id] %}
+                        {% for e in stop_expenses[stop.id] %}
+                            <div class="act-line">
+                                <span><span class="badge">{{ e.category }}</span> {{ e.description or '' }}</span>
+                                <span class="cost">₹{{ "{:,.0f}".format(e.amount or 0) }}</span>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="muted" style="margin:0">None listed.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="total-bar">
+        <div>
+            <div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:.05em">Total trip cost</div>
+            <div style="color:rgba(255,255,255,.75);font-size:13px">
+                Across {{ stops|length }} cit{{ 'y' if stops|length == 1 else 'ies' }}
+            </div>
+        </div>
+        <div class="amount">₹{{ "{:,.0f}".format(grand_total) }}</div>
+    </div>
+
+    <p class="muted" style="text-align:center;margin-top:24px">
+        Shared from GlobeTrotter · <a href="/">plan your own trip</a>
+    </p>
+
+</div>
+
+</body>
+</html>

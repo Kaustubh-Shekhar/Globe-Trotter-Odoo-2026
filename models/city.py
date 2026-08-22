@@ -5,6 +5,9 @@ class City(db.Model):
     __tablename__ = "cities"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
+    # state / province. Nullable — only filled in where it is meaningful
+    # (every Indian city has one; most single-region destinations do not).
+    state = db.Column(db.String(120))
     country = db.Column(db.String(120), nullable=False)
     lat = db.Column(db.Float)
     lon = db.Column(db.Float)
@@ -14,6 +17,12 @@ class City(db.Model):
 
     activities = db.relationship(
         "Activity", backref="city", cascade="all, delete-orphan")
+
+    @property
+    def region(self):
+        """'Jaipur, Rajasthan, India' — or 'Paris, France' where there is no state."""
+        parts = [self.state, self.country]
+        return ", ".join(p for p in parts if p)
 
     def __repr__(self):
         return f"<City {self.name}>"
