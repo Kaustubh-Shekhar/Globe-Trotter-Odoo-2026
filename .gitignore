@@ -6,7 +6,5 @@ venv/
 .env
 .idea/
 *.pyc
-.claude/
-CLAUDE.md
 static/uploads/*
 !static/uploads/.gitkeep
