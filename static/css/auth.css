@@ -1,0 +1,597 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --background: #f7f5f0;
+    --surface: #ffffff;
+    --text: #18211f;
+    --muted: #7b817d;
+    --primary: #193b36;
+    --primary-light: #28574f;
+    --border: #e5e5df;
+    --error: #c54b4b;
+}
+
+body {
+    font-family: "DM Sans", sans-serif;
+    background: var(--background);
+    color: var(--text);
+}
+
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+}
+
+
+/* =========================================
+   LEFT VISUAL SECTION
+========================================= */
+
+.visual-section {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(22, 57, 51, 0.95),
+            rgba(25, 59, 54, 0.65)
+        ),
+        url("https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1800&q=85")
+        center / cover no-repeat;
+
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding: 42px 48px;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 80% 20%,
+            rgba(255,255,255,0.12),
+            transparent 35%
+        );
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brand {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.4px;
+}
+
+.brand-icon {
+    width: 34px;
+    height: 34px;
+
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+
+    display: grid;
+    place-items: center;
+
+    font-size: 17px;
+}
+
+
+/* =========================================
+   VISUAL CONTENT
+========================================= */
+
+.visual-content {
+    position: relative;
+    z-index: 2;
+
+    max-width: 590px;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.eyebrow {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    font-weight: 600;
+    opacity: 0.7;
+
+    margin-bottom: 22px;
+}
+
+.visual-content h1 {
+    font-family: "Playfair Display", serif;
+
+    font-size: clamp(48px, 5vw, 76px);
+    line-height: 0.98;
+
+    font-weight: 500;
+    letter-spacing: -3px;
+
+    margin-bottom: 28px;
+}
+
+.visual-content h1 span {
+    font-style: italic;
+    opacity: 0.78;
+}
+
+.visual-description {
+    max-width: 480px;
+
+    font-size: 16px;
+    line-height: 1.7;
+
+    color: rgba(255,255,255,0.72);
+}
+
+.destination-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-top: 30px;
+}
+
+.destination-pills span {
+    padding: 8px 14px;
+
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 100px;
+
+    background: rgba(255,255,255,0.08);
+
+    font-size: 12px;
+
+    backdrop-filter: blur(10px);
+}
+
+
+/* =========================================
+   VISUAL FOOTER
+========================================= */
+
+.visual-footer {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    gap: 10px;
+    align-items: center;
+
+    color: rgba(255,255,255,0.6);
+
+    font-size: 12px;
+}
+
+
+/* =========================================
+   FORM SECTION
+========================================= */
+
+.form-section {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--surface);
+
+    padding: 50px 70px;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 430px;
+}
+
+
+/* =========================================
+   FORM VIEWS
+========================================= */
+
+.form-view {
+    display: none;
+
+    animation: fadeIn 0.35s ease;
+}
+
+.form-view.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+/* =========================================
+   MOBILE BRAND
+========================================= */
+
+.mobile-brand {
+    display: none;
+}
+
+
+/* =========================================
+   FORM HEADER
+========================================= */
+
+.form-header {
+    margin-bottom: 34px;
+}
+
+.form-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+
+    color: var(--primary);
+
+    margin-bottom: 14px;
+}
+
+.form-header h2 {
+    font-family: "Playfair Display", serif;
+
+    font-size: 43px;
+    line-height: 1.05;
+
+    font-weight: 500;
+
+    letter-spacing: -1.5px;
+
+    margin-bottom: 15px;
+}
+
+.form-header > p:last-child {
+    color: var(--muted);
+
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    margin-bottom: 8px;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 8px;
+}
+
+.label-row label {
+    margin-bottom: 0;
+}
+
+.input-group input {
+    width: 100%;
+
+    height: 52px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: #fbfbf9;
+
+    padding: 0 15px;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    color: var(--text);
+
+    outline: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s,
+        background 0.2s;
+}
+
+.input-group input::placeholder {
+    color: #aaaead;
+}
+
+.input-group input:focus {
+    background: white;
+
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 3px rgba(25, 59, 54, 0.08);
+}
+
+.input-group input.invalid {
+    border-color: var(--error);
+}
+
+
+/* =========================================
+   PASSWORD
+========================================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 65px;
+}
+
+.password-toggle {
+    position: absolute;
+
+    right: 13px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    border: none;
+    background: transparent;
+
+    color: var(--primary);
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   FORGOT PASSWORD
+========================================= */
+
+.forgot-button {
+    border: none;
+    background: transparent;
+
+    color: var(--primary);
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+.error-message {
+    display: block;
+
+    min-height: 16px;
+
+    margin-top: 5px;
+
+    color: var(--error);
+
+    font-size: 11px;
+}
+
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+
+.primary-button {
+    width: 100%;
+    height: 53px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: var(--primary);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    transition:
+        transform 0.2s,
+        background 0.2s,
+        box-shadow 0.2s;
+}
+
+.primary-button:hover {
+    background: var(--primary-light);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(25, 59, 54, 0.18);
+}
+
+.primary-button:active {
+    transform: translateY(0);
+}
+
+.primary-button span {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin: 28px 0;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: var(--border);
+}
+
+.divider span {
+    color: #aaa;
+
+    font-size: 11px;
+}
+
+
+/* =========================================
+   SWITCH
+========================================= */
+
+.switch-text {
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+.switch-button {
+    border: none;
+    background: transparent;
+
+    color: var(--primary);
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.switch-button:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .auth-page {
+        grid-template-columns: 1fr;
+    }
+
+    .visual-section {
+        display: none;
+    }
+
+    .form-section {
+        padding: 35px 25px;
+    }
+
+    .mobile-brand {
+        display: flex;
+
+        align-items: center;
+        gap: 10px;
+
+        margin-bottom: 50px;
+
+        color: var(--primary);
+
+        font-weight: 700;
+    }
+
+    .mobile-brand .brand-icon {
+        border-color: var(--primary);
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .form-section {
+        padding: 25px 20px;
+    }
+
+    .mobile-brand {
+        margin-bottom: 38px;
+    }
+
+    .form-header h2 {
+        font-size: 36px;
+    }
+
+}
