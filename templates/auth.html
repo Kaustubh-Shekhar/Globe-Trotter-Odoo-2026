@@ -25,6 +25,16 @@
 
 <body>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="auth-flashes">
+                {% for category, message in messages %}
+                    <div class="auth-flash auth-flash-{{ category or 'info' }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <main class="auth-page">
 
         <!-- LEFT SIDE -->
@@ -94,7 +104,7 @@
                     </div>
 
 
-                    <form id="loginForm" novalidate>
+                    <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}" novalidate>
 
                         <div class="input-group">
 
@@ -212,7 +222,7 @@
                     </div>
 
 
-                    <form id="signupForm" novalidate>
+                    <form id="signupForm" method="POST" action="{{ url_for('auth.signup') }}" novalidate>
 
                         <div class="input-group">
 

@@ -106,9 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (valid) {
 
-            showSuccess(
-                "Login successful! Database authentication will be connected next."
-            );
+            loginForm.submit();
 
         }
 
@@ -183,9 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (valid) {
 
-            showSuccess(
-                "Account details validated! Database registration will be connected next."
-            );
+            signupForm.submit();
 
         }
 

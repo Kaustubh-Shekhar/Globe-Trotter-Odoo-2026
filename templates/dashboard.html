@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — GlobeTrotter{% endblock %}
+
+{% block styles %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, var(--primary), #43548f);
+        color: #fff;
+        border-radius: var(--radius);
+        padding: 28px 26px;
+        margin-bottom: 26px;
+    }
+    .hero h1 { color: #fff; }
+    .hero p { margin: 6px 0 18px; opacity: .85; font-size: 14px; }
+    .section-head { margin: 30px 0 14px; }
+    .city-card .card-img { height: 120px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero">
+    <h1>Hey {{ user.first_name }} 👋</h1>
+    <p>Where are we going next?</p>
+    <a class="btn btn-accent" href="/trips/new">Plan a new trip</a>
+</div>
+
+<div class="spread section-head">
+    <h2 style="margin:0">Your recent trips</h2>
+    <a class="muted" href="/trips">View all →</a>
+</div>
+
+{% if trips %}
+    <div class="grid">
+        {% for trip in trips %}
+            <div class="card">
+                {% if trip.cover_image %}
+                    <img class="card-img" src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                {% endif %}
+                <h3>{{ trip.name }}</h3>
+                <p class="muted">
+                    {% if trip.start_date %}
+                        {{ trip.start_date.strftime('%d %b %Y') }} —
+                        {{ trip.end_date.strftime('%d %b %Y') }}
+                    {% else %}
+                        Dates not set
+                    {% endif %}
+                </p>
+                <p class="muted">
+                    <span class="badge">{{ trip.stops|length }} stops</span>
+                    <span class="badge badge-accent">{{ trip.days }} days</span>
+                </p>
+                <div class="row" style="margin-top:12px">
+                    <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
+                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card empty">
+        <p>No trips yet. Your first adventure is one click away.</p>
+        <a class="btn btn-accent" href="/trips/new">Plan a trip</a>
+    </div>
+{% endif %}
+
+<div class="section-head">
+    <h2 style="margin:0">Popular destinations</h2>
+</div>
+
+<div class="grid">
+    {% for city in popular_cities %}
+        <div class="card city-card">
+            {% if city.image_url %}
+                <img class="card-img" src="{{ city.image_url }}" alt="{{ city.name }}">
+            {% endif %}
+            <h3>{{ city.name }}</h3>
+            <p class="muted">{{ city.country }}</p>
+            <span class="badge">Popularity {{ city.popularity }}</span>
+            <span class="badge badge-accent">{{ "₹" * city.cost_index }}</span>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
