@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}My Trips — GlobeTrotter{% endblock %}
+
+{% block styles %}
+<style>
+    .trip-row {
+        display: grid;
+        grid-template-columns: 150px 1fr auto;
+        gap: 18px;
+        align-items: center;
+    }
+    @media (max-width: 700px) {
+        .trip-row { grid-template-columns: 1fr; }
+        .trip-row .thumb { height: 130px; }
+    }
+    .thumb {
+        width: 100%; height: 96px; object-fit: cover;
+        border-radius: 10px; display: block; background: var(--line);
+    }
+    .thumb-placeholder {
+        width: 100%; height: 96px; border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary), #43548f);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 26px;
+    }
+    .trip-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="spread" style="margin-bottom:20px">
+    <div>
+        <h1>My Trips</h1>
+        <p class="muted" style="margin:0">
+            {{ trips|length }} trip{{ '' if trips|length == 1 else 's' }} planned
+        </p>
+    </div>
+    <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">Plan a new trip</a>
+</div>
+
+{% if trips %}
+    {% for trip in trips %}
+        <div class="card">
+            <div class="trip-row">
+
+                {% if trip.cover_image %}
+                    <img class="thumb" src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                {% else %}
+                    <div class="thumb-placeholder">🌍</div>
+                {% endif %}
+
+                <div>
+                    <h3 style="margin-bottom:4px">{{ trip.name }}</h3>
+                    <p class="muted" style="margin:0 0 8px">
+                        {% if trip.start_date %}
+                            {{ trip.start_date.strftime('%d %b %Y') }} —
+                            {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+                        {% else %}
+                            Dates not set
+                        {% endif %}
+                    </p>
+                    {% if trip.description %}
+                        <p class="muted" style="margin:0 0 8px">{{ trip.description }}</p>
+                    {% endif %}
+                    <span class="badge">{{ trip.stops|length }} stops</span>
+                    <span class="badge badge-accent">{{ trip.days }} days</span>
+                    {% if trip.is_public %}
+                        <span class="badge">Shared</span>
+                    {% endif %}
+                </div>
+
+                <div class="trip-actions">
+                    <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
+                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
+                    <form method="POST"
+                          action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}"
+                          onsubmit="return confirm('Delete \'{{ trip.name }}\' and everything in it?');"
+                          style="display:inline">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="card empty">
+        <p style="font-size:34px;margin:0 0 6px">🧳</p>
+        <p>You haven't planned anything yet.</p>
+        <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">Plan your first trip</a>
+    </div>
+{% endif %}
+
+{% endblock %}
