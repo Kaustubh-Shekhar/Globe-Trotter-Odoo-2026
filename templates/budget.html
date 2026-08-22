@@ -1,34 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Budget — {{ trip.name }}{% endblock %}
+{% set active = 'trips' %}
 
 {% block styles %}
 <style>
-    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 22px; }
-    .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-            box-shadow: var(--shadow); padding: 16px 18px; }
-    .stat .label { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
-    .stat .value { font-size: 24px; font-weight: 700; margin-top: 4px; color: var(--primary); }
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+    .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+    .stat .value { font-size: 22px; font-weight: 700; margin-top: 3px; color: var(--primary); }
     .stat.accent .value { color: var(--accent); }
 
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-    @media (max-width: 780px) { .split { grid-template-columns: 1fr; } }
+    .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 820px) { .split { grid-template-columns: 1fr; } }
 
-    .chart-wrap { position: relative; height: 300px; }
-
-    table.money { width: 100%; border-collapse: collapse; font-size: 14px; }
-    table.money th { text-align: left; font-size: 12px; text-transform: uppercase;
-                     letter-spacing: .04em; color: var(--muted); padding: 8px 6px;
-                     border-bottom: 1px solid var(--line); }
-    table.money td { padding: 9px 6px; border-bottom: 1px solid var(--line); }
-    table.money tr:last-child td { border-bottom: none; }
-    table.money .num { text-align: right; font-variant-numeric: tabular-nums; }
-    table.money tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+    .chart-wrap { position: relative; height: 290px; }
+    .bar { height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+    .bar span { display: block; height: 100%; background: var(--accent); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="spread" style="margin-bottom:18px">
+<div class="spread" style="margin-bottom:16px">
     <div>
         <h1>Budget</h1>
         <p class="muted" style="margin:0">
@@ -65,24 +58,29 @@
 
 <div class="split">
 
-    <div class="card">
-        <h2>Where the money goes</h2>
+    <div class="section">
+        <span class="section-title">Where the money goes</span>
         <div class="chart-wrap">
             <canvas id="budgetChart" data-trip-id="{{ trip.id }}"></canvas>
         </div>
-        <p class="muted" id="chartEmpty" style="text-align:center"></p>
+        <p class="muted" id="chartEmpty" style="text-align:center;margin:6px 0 0"></p>
     </div>
 
-    <div class="card">
-        <h2>By category</h2>
-        <table class="money">
+    <div class="section">
+        <span class="section-title">By category</span>
+        <table class="data">
             <thead>
                 <tr><th>Category</th><th class="num">Amount</th><th class="num">Share</th></tr>
             </thead>
             <tbody>
                 {% for category, amount in by_category.items() %}
                     <tr>
-                        <td>{{ category }}</td>
+                        <td>
+                            {{ category }}
+                            <div class="bar">
+                                <span style="width: {{ (amount / total * 100) if total > 0 else 0 }}%"></span>
+                            </div>
+                        </td>
                         <td class="num">₹{{ "{:,.0f}".format(amount) }}</td>
                         <td class="num muted">
                             {% if total > 0 %}{{ "{:.0f}".format(amount / total * 100) }}%{% else %}—{% endif %}
@@ -98,10 +96,10 @@
 
 </div>
 
-<div class="card" style="margin-top:16px">
-    <h2>Cost per city</h2>
+<div class="section">
+    <span class="section-title">Cost per city</span>
     {% if per_stop %}
-        <table class="money">
+        <table class="data">
             <thead>
                 <tr>
                     <th>City</th><th class="num">Nights</th>

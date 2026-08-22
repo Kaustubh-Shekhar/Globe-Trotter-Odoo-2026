@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template
 from extensions import db
 
@@ -34,6 +36,22 @@ register_if_ready("route.itinerary", "itinerary_bp")
 register_if_ready("route.share", "share_bp")
 
 
+@app.context_processor
+def inject_nav_user():
+    """Makes the logged-in user available to every template (base.html avatar)
+    without each blueprint having to pass it in."""
+    from helpers import current_user
+    user = current_user()
+    initials = "?"
+    if user:
+        first = (user.first_name or "")[:1]
+        last = (user.last_name or "")[:1]
+        if last == "-":
+            last = ""
+        initials = (first + last).upper() or "?"
+    return {"nav_user": user, "nav_initials": initials}
+
+
 @app.route("/")
 def home():
     return render_template("auth.html")
@@ -44,4 +62,6 @@ with app.app_context():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # honours PORT when something else already holds 5000; plain
+    # `python app.py` still comes up on the usual http://127.0.0.1:5000
+    app.run(debug=True, port=int(os.environ.get("PORT", 5000)))
