@@ -6,3 +6,5 @@ venv/
 .env
 .idea/
 *.pyc
+.claude/
+CLAUDE.md
