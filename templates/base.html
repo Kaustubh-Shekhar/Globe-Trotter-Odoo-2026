@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GlobeTrotter{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+<body>
+
+<!-- Nav hrefs are hardcoded on purpose. url_for('trips.dashboard') raises a
+     BuildError on EVERY page until that blueprint exists, and base.html is
+     shared by both of us. Literal paths match the route contract and never
+     break mid-build. Use url_for() normally inside page templates. -->
+<nav class="nav">
+    <div class="nav-inner">
+        <a class="brand" href="/dashboard">GlobeTrotter</a>
+        {% if session.get('user_id') %}
+            <a href="/dashboard">Dashboard</a>
+            <a href="/trips">My Trips</a>
+            <a href="/trips/new">Plan a Trip</a>
+            <span class="spacer"></span>
+            <a href="/auth/logout">Log out</a>
+        {% else %}
+            <span class="spacer"></span>
+            <a href="/">Log in</a>
+        {% endif %}
+    </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flashes">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category or 'info' }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

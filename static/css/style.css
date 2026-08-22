@@ -1,0 +1,180 @@
+/* GlobeTrotter — global variables + shared components.
+   FROZEN. Page-specific CSS goes in the template's {% block styles %}. */
+
+:root {
+  --bg: #FAF8F5;
+  --card: #FFFFFF;
+  --primary: #2B3A67;
+  --accent: #FF6B4A;
+  --text: #1A1F36;
+  --muted: #6B7280;
+  --line: #E7E3DD;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(0, 0, 0, .06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 { font-size: 28px; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 0 0 12px; }
+h3 { font-size: 16px; margin: 0 0 8px; }
+
+/* ---------- layout ---------- */
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spread {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.muted { color: var(--muted); font-size: 13px; }
+
+/* ---------- nav ---------- */
+
+.nav {
+  background: var(--primary);
+  color: #fff;
+  padding: 0 20px;
+}
+
+.nav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.nav a { color: #fff; opacity: .85; font-size: 14px; }
+.nav a:hover { opacity: 1; text-decoration: none; }
+.nav .brand { font-weight: 700; font-size: 17px; opacity: 1; margin-right: 8px; }
+.nav .spacer { flex: 1; }
+
+/* ---------- card ---------- */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.card + .card { margin-top: 14px; }
+.card-img { width: 100%; height: 140px; object-fit: cover;
+            border-radius: 10px; margin-bottom: 10px; display: block; }
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary);
+  border-radius: 9px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.3;
+}
+.btn:hover { opacity: .9; text-decoration: none; color: #fff; }
+
+.btn-accent { background: var(--accent); border-color: var(--accent); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--line);
+}
+.btn-ghost:hover { color: var(--primary); border-color: var(--primary); }
+
+.btn-sm { padding: 5px 10px; font-size: 12.5px; border-radius: 7px; }
+.btn-danger { background: #DC2626; border-color: #DC2626; }
+
+/* ---------- forms ---------- */
+
+.input, select.input, textarea.input {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+}
+.input:focus { outline: 2px solid rgba(43, 58, 103, .25); border-color: var(--primary); }
+
+label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.field { margin-bottom: 12px; }
+
+/* ---------- badge ---------- */
+
+.badge {
+  display: inline-block;
+  background: rgba(43, 58, 103, .08);
+  color: var(--primary);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-accent { background: rgba(255, 107, 74, .12); color: var(--accent); }
+
+/* ---------- flash ---------- */
+
+.flashes { max-width: 1080px; margin: 16px auto 0; padding: 0 20px; }
+
+.flash {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  border: 1px solid;
+}
+.flash-success { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+.flash-error   { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+.flash-info    { background: #EFF6FF; border-color: #BFDBFE; color: #1E40AF; }
+
+/* ---------- empty state ---------- */
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
