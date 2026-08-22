@@ -1,12 +1,17 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 from extensions import db
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "hackathon-dev-key"
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///globetrotter.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# profile photos and trip covers are uploaded, so cap the request size.
+# Flask raises 413 past this; see the handler below.
+app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024   # 4 MB
+app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 db.init_app(app)
 
@@ -34,6 +39,15 @@ register_if_ready("route.trips", "trips_bp")
 register_if_ready("route.budget", "budget_bp")
 register_if_ready("route.itinerary", "itinerary_bp")
 register_if_ready("route.share", "share_bp")
+register_if_ready("route.profile", "profile_bp")
+
+
+@app.errorhandler(413)
+def too_large(_e):
+    """A file over MAX_CONTENT_LENGTH would otherwise show a bare 413 page."""
+    from flask import flash, request, redirect
+    flash("That image is too large — keep it under 4 MB.", "error")
+    return redirect(request.referrer or url_for("home")), 302
 
 
 @app.context_processor

@@ -8,3 +8,5 @@ venv/
 *.pyc
 .claude/
 CLAUDE.md
+static/uploads/*
+!static/uploads/.gitkeep

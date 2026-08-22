@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Profile — GlobeTrotter{% endblock %}
+{% set active = 'profile' %}
+
+{% block styles %}
+<style>
+    .profile-top { display: grid; grid-template-columns: 200px 1fr; gap: 18px; align-items: start; }
+    @media (max-width: 700px) { .profile-top { grid-template-columns: 1fr; } }
+
+    .photo-col { text-align: center; }
+    .photo-ring {
+        width: 132px; height: 132px; border-radius: 50%;
+        border: 1px solid var(--line); background: var(--line-soft);
+        margin: 0 auto 10px; overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--primary); font-size: 34px; font-weight: 700;
+    }
+    .photo-ring img { width: 100%; height: 100%; object-fit: cover; }
+
+    .file-row { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    input[type="file"].input { padding: 6px; font-size: 12.5px; }
+
+    .trip-mini { display: flex; flex-direction: column; }
+    .trip-mini .tile-body { flex: 1; display: flex; flex-direction: column; }
+    .trip-mini .mini-actions { margin-top: auto; padding-top: 9px; display: flex; gap: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h1>My Profile</h1>
+<p class="muted" style="margin-bottom:18px">
+    Your details, and every trip you have planned.
+</p>
+
+<form method="POST" action="{{ url_for('profile.update_profile') }}"
+      enctype="multipart/form-data">
+
+    <div class="section">
+        <span class="section-title">User details</span>
+
+        <div class="profile-top">
+
+            <div class="photo-col">
+                <div class="photo-ring">
+                    {% if user.photo %}
+                        <img src="{{ user.photo }}" alt="{{ user.first_name }}">
+                    {% else %}
+                        {{ (user.first_name[:1] ~ user.last_name[:1])|upper }}
+                    {% endif %}
+                </div>
+
+                <div class="field" style="margin-bottom:6px">
+                    <label for="photo_file" class="muted" style="font-weight:500">Change photo</label>
+                    <input class="input" type="file" id="photo_file" name="photo_file"
+                           accept="image/png,image/jpeg,image/gif,image/webp">
+                </div>
+                <p class="muted" style="font-size:11.5px;margin:0">
+                    PNG, JPG, GIF or WEBP · up to 4 MB
+                </p>
+            </div>
+
+            <div>
+                <div class="two-col">
+                    <div class="field">
+                        <label for="first_name">First Name</label>
+                        <input class="input" type="text" id="first_name" name="first_name"
+                               value="{{ user.first_name or '' }}" required>
+                    </div>
+                    <div class="field">
+                        <label for="last_name">Last Name</label>
+                        <input class="input" type="text" id="last_name" name="last_name"
+                               value="{{ user.last_name or '' }}" required>
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div class="field">
+                        <label for="email">Email Address</label>
+                        <input class="input" type="email" id="email" name="email"
+                               value="{{ user.email or '' }}" required>
+                    </div>
+                    <div class="field">
+                        <label for="phone">Phone Number</label>
+                        <input class="input" type="tel" id="phone" name="phone"
+                               value="{{ user.phone or '' }}">
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div class="field">
+                        <label for="city">Home City</label>
+                        <input class="input" type="text" id="city" name="city"
+                               value="{{ user.city or '' }}">
+                    </div>
+                    <div class="field">
+                        <label for="country">Country</label>
+                        <input class="input" type="text" id="country" name="country"
+                               value="{{ user.country or '' }}">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input class="input" type="text" id="username"
+                           value="{{ user.username }}" disabled
+                           title="Your username cannot be changed">
+                </div>
+
+                <div class="row" style="margin-top:14px">
+                    <button class="btn btn-accent" type="submit">Save changes</button>
+                    <a class="btn btn-ghost" href="{{ url_for('trips.dashboard') }}">Cancel</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+{% if user.photo %}
+    <form method="POST" action="{{ url_for('profile.remove_photo') }}"
+          style="margin:-8px 0 18px">
+        <button class="btn btn-ghost btn-sm" type="submit">Remove photo</button>
+    </form>
+{% endif %}
+
+{# ---------------- preplanned trips ---------------- #}
+
+<div class="section">
+    <span class="section-title">Preplanned Trips · {{ preplanned|length }}</span>
+
+    {% if preplanned %}
+        <div class="grid-3">
+            {% for trip in preplanned %}
+                <div class="tile trip-mini">
+                    {% if trip.cover_image %}
+                        <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                    {% else %}
+                        <div class="placeholder-img">🧳</div>
+                    {% endif %}
+                    <div class="tile-body">
+                        <h3>{{ trip.name }}</h3>
+                        <p class="muted" style="margin:0 0 6px">
+                            {% if trip.start_date %}
+                                {{ trip.start_date.strftime('%d %b %Y') }} —
+                                {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+                            {% else %}
+                                Dates not set
+                            {% endif %}
+                        </p>
+                        <div>
+                            <span class="badge">{{ trip.stops|length }} stops</span>
+                            <span class="badge badge-accent">{{ trip.days }} days</span>
+                        </div>
+                        <div class="mini-actions">
+                            <a class="btn btn-sm" href="/trips/{{ trip.id }}/view">View</a>
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/build">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <p>Nothing planned yet.</p>
+            <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
+        </div>
+    {% endif %}
+</div>
+
+{# ---------------- previous trips ---------------- #}
+
+<div class="section">
+    <span class="section-title">Previous Trips · {{ previous|length }}</span>
+
+    {% if previous %}
+        <div class="grid-3">
+            {% for trip in previous %}
+                <div class="tile trip-mini">
+                    {% if trip.cover_image %}
+                        <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                    {% else %}
+                        <div class="placeholder-img">🗺️</div>
+                    {% endif %}
+                    <div class="tile-body">
+                        <h3>{{ trip.name }}</h3>
+                        <p class="muted" style="margin:0 0 6px">
+                            {{ trip.start_date.strftime('%d %b %Y') }} —
+                            {{ trip.end_date.strftime('%d %b %Y') }}
+                        </p>
+                        <div class="mini-actions">
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">No completed trips yet.</div>
+    {% endif %}
+</div>
+
+{% endblock %}

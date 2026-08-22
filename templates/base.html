@@ -24,7 +24,14 @@
             </nav>
             <span class="spacer"></span>
             <a href="/auth/logout" class="muted" style="font-size:13px">Log out</a>
-            <span class="avatar" title="{{ nav_user.first_name }} {{ nav_user.last_name }}">{{ nav_initials }}</span>
+            <a class="avatar" href="{{ url_for('profile.profile') }}"
+               title="{{ nav_user.first_name }} {{ nav_user.last_name }} — view profile">
+                {% if nav_user.photo %}
+                    <img src="{{ nav_user.photo }}" alt="">
+                {% else %}
+                    {{ nav_initials }}
+                {% endif %}
+            </a>
         {% else %}
             <span class="spacer"></span>
             <a href="/" class="muted" style="font-size:13px">Log in</a>

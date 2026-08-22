@@ -77,7 +77,9 @@ h3 { font-size: 15.5px; margin: 0 0 6px; }
   font-size: 13px; font-weight: 700;
   flex: none;
 }
-.avatar:hover { text-decoration: none; color: #fff; }
+.avatar:hover { text-decoration: none; color: #fff; box-shadow: 0 0 0 3px rgba(43,58,103,.18); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.avatar { overflow: hidden; transition: box-shadow .12s ease; }
 
 .avatar-lg {
   width: 88px; height: 88px;
