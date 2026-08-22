@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from werkzeug.security import generate_password_hash
 
 from app import app
@@ -196,7 +196,10 @@ def seed():
             a = act_map[act_name]
             db.session.add(TripActivity(
                 stop_id=stop.id, activity_id=a.id, name=a.name,
-                cost=a.estimated_cost, date=sd, position=j))
+                cost=a.estimated_cost, position=j,
+                # spread activities over consecutive days so the itinerary
+                # view shows a real Day 1 / Day 2 / Day 3 breakdown
+                date=min(sd + timedelta(days=j), ed)))
 
         db.session.add(Expense(trip_id=trip.id, stop_id=stop.id,
                                category="Accommodation", amount=stay,

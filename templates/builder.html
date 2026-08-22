@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Build — {{ trip.name }}{% endblock %}
+{% set active = 'trips' %}
+
+{% block styles %}
+<style>
+    .stop-head { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; }
+    .stop-thumb { width: 64px; height: 52px; object-fit: cover; border-radius: 5px;
+                  display: block; background: var(--line-soft); }
+    .stop-thumb-ph { width: 64px; height: 52px; border-radius: 5px; font-size: 18px;
+                     background: linear-gradient(135deg, var(--primary), #4a5b93);
+                     display: flex; align-items: center; justify-content: center; color: #fff; }
+
+    .meta-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+    .section-budget { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+    .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    @media (max-width: 780px) { .panes { grid-template-columns: 1fr; } }
+
+    .pane { border: 1px solid var(--line-soft); border-radius: 6px; padding: 12px; }
+    .pane h4 { margin: 0 0 9px; font-size: 12px; text-transform: uppercase;
+               letter-spacing: .05em; color: var(--muted); }
+
+    .line {
+        display: flex; align-items: center; gap: 8px;
+        padding: 7px 0; border-bottom: 1px solid var(--line-soft);
+        font-size: 13.5px;
+    }
+    .line:last-of-type { border-bottom: none; }
+    .line .grow { flex: 1; min-width: 0; }
+    .line .cost { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .line form { display: inline; }
+    .icon-btn {
+        background: none; border: none; color: var(--muted); cursor: pointer;
+        font-size: 15px; line-height: 1; padding: 2px 4px; border-radius: 4px;
+    }
+    .icon-btn:hover { color: #DC2626; background: #FEF2F2; }
+
+    .add-form { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+    .add-form .row { gap: 6px; }
+    .add-form .input { font-size: 13px; padding: 6px 9px; }
+    .or-split { text-align: center; font-size: 11px; color: var(--muted);
+                text-transform: uppercase; letter-spacing: .06em; margin: 8px 0; }
+
+    .order-btns { display: flex; flex-direction: column; gap: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="spread" style="margin-bottom:16px">
+    <div>
+        <h1>{{ trip.name }}</h1>
+        <p class="muted" style="margin:0">
+            {% if trip.start_date %}
+                {{ trip.start_date.strftime('%d %b %Y') }} — {{ trip.end_date.strftime('%d %b %Y') }} ·
+            {% endif %}
+            {{ trip.days }} days · {{ stops|length }} cit{{ 'y' if stops|length == 1 else 'ies' }}
+        </p>
+    </div>
+    <div class="row">
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('itinerary.view_trip', trip_id=trip.id) }}">View itinerary</a>
+        <a class="btn btn-sm" href="/trips/{{ trip.id }}/budget">Budget</a>
+    </div>
+</div>
+
+{# ---------------- existing stops, one section each ---------------- #}
+
+{% for stop in stops %}
+    <div class="section">
+        <span class="section-title">Section {{ loop.index }}</span>
+
+        <div class="stop-head">
+            {% if stop.city.image_url %}
+                <img class="stop-thumb" src="{{ stop.city.image_url }}" alt="{{ stop.city.name }}">
+            {% else %}
+                <div class="stop-thumb-ph">🌍</div>
+            {% endif %}
+
+            <div>
+                <h3 style="margin:0">{{ stop.city.name }}, {{ stop.city.country }}</h3>
+                <div class="meta-row">
+                    <span class="badge">
+                        Date range:
+                        {% if stop.start_date %}
+                            {{ stop.start_date.strftime('%d %b') }} to
+                            {{ stop.end_date.strftime('%d %b') if stop.end_date else '?' }}
+                        {% else %}
+                            not set
+                        {% endif %}
+                    </span>
+                    <span class="badge">{{ stop.nights }} nights</span>
+                    <span class="muted">Budget of this section:</span>
+                    <span class="section-budget">₹{{ "{:,.0f}".format(stop_totals[stop.id]) }}</span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="order-btns">
+                    <form method="POST" action="{{ url_for('itinerary.move_stop', stop_id=stop.id) }}">
+                        <input type="hidden" name="direction" value="up">
+                        <button class="btn btn-ghost btn-sm" type="submit"
+                                {{ 'disabled' if loop.first }} title="Move earlier">↑</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('itinerary.move_stop', stop_id=stop.id) }}">
+                        <input type="hidden" name="direction" value="down">
+                        <button class="btn btn-ghost btn-sm" type="submit"
+                                {{ 'disabled' if loop.last }} title="Move later">↓</button>
+                    </form>
+                </div>
+                <form method="POST" action="{{ url_for('itinerary.delete_stop', stop_id=stop.id) }}"
+                      onsubmit="return confirm('Remove {{ stop.city.name }} and everything in it?');">
+                    <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panes">
+
+            {# ---- activities ---- #}
+            <div class="pane">
+                <h4>Activities</h4>
+
+                {% if stop.trip_activities %}
+                    {% for ta in stop.trip_activities %}
+                        <div class="line">
+                            <span class="grow">
+                                {{ ta.name }}
+                                {% if not ta.activity_id %}<span class="badge">custom</span>{% endif %}
+                                {% if ta.date %}
+                                    <span class="muted">· {{ ta.date.strftime('%d %b') }}</span>
+                                {% endif %}
+                            </span>
+                            <span class="cost">₹{{ "{:,.0f}".format(ta.cost or 0) }}</span>
+                            <form method="POST" action="{{ url_for('itinerary.delete_activity', ta_id=ta.id) }}">
+                                <button class="icon-btn" type="submit" title="Remove">×</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted" style="margin:0">Nothing planned here yet.</p>
+                {% endif %}
+
+                <div class="add-form">
+                    <form method="POST" action="{{ url_for('itinerary.add_activity', stop_id=stop.id) }}">
+                        <div class="row">
+                            <select class="input grow" name="activity_id" style="flex:1">
+                                <option value="">Choose from {{ stop.city.name }}...</option>
+                                {% for a in activities.get(stop.city_id, []) %}
+                                    <option value="{{ a.id }}">
+                                        {{ a.name }} — ₹{{ "{:,.0f}".format(a.estimated_cost or 0) }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <input class="input" type="date" name="date" style="width:145px"
+                                   value="{{ stop.start_date.isoformat() if stop.start_date else '' }}">
+                            <button class="btn btn-sm" type="submit">Add</button>
+                        </div>
+                    </form>
+
+                    <div class="or-split">or add your own</div>
+
+                    <form method="POST" action="{{ url_for('itinerary.add_activity', stop_id=stop.id) }}">
+                        <div class="row">
+                            <input class="input grow" type="text" name="name" style="flex:1"
+                                   placeholder="Custom activity" required>
+                            <input class="input" type="number" name="cost" step="1" min="0"
+                                   placeholder="₹ cost" style="width:100px">
+                            <button class="btn btn-sm btn-ghost" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# ---- other costs ---- #}
+            <div class="pane">
+                <h4>Transport / Stay / Food</h4>
+
+                {% if stop_expenses[stop.id] %}
+                    {% for e in stop_expenses[stop.id] %}
+                        <div class="line">
+                            <span class="grow">
+                                <span class="badge">{{ e.category }}</span>
+                                {{ e.description or '' }}
+                            </span>
+                            <span class="cost">₹{{ "{:,.0f}".format(e.amount or 0) }}</span>
+                            <form method="POST" action="{{ url_for('itinerary.delete_expense', expense_id=e.id) }}">
+                                <button class="icon-btn" type="submit" title="Remove">×</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted" style="margin:0">No travel or stay costs yet.</p>
+                {% endif %}
+
+                <div class="add-form">
+                    <form method="POST" action="{{ url_for('itinerary.add_expense', stop_id=stop.id) }}">
+                        <div class="row">
+                            <select class="input" name="category" style="width:135px">
+                                {% for c in categories %}
+                                    <option value="{{ c }}">{{ c }}</option>
+                                {% endfor %}
+                            </select>
+                            <input class="input grow" type="text" name="description" style="flex:1"
+                                   placeholder="Hotel, flight, meals...">
+                            <input class="input" type="number" name="amount" step="1" min="1"
+                                   placeholder="₹" style="width:90px" required>
+                            <button class="btn btn-sm" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endfor %}
+
+{# ---------------- add another section ---------------- #}
+
+<div class="section" id="addStop">
+    <span class="section-title">
+        {% if stops %}+ Add another section{% else %}Add your first city{% endif %}
+    </span>
+
+    <form method="POST" action="{{ url_for('itinerary.add_stop', trip_id=trip.id) }}">
+        <div class="row" style="align-items:flex-end">
+            <div class="field grow" style="flex:2;margin-bottom:0">
+                <label for="city_id">City</label>
+                <select class="input" id="city_id" name="city_id" required>
+                    <option value="">Select a place...</option>
+                    {% for city in cities %}
+                        <option value="{{ city.id }}">{{ city.name }}, {{ city.country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field" style="margin-bottom:0">
+                <label for="stop_start">Arrive</label>
+                <input class="input" type="date" id="stop_start" name="start_date"
+                       value="{{ trip.start_date.isoformat() if trip.start_date else '' }}">
+            </div>
+            <div class="field" style="margin-bottom:0">
+                <label for="stop_end">Leave</label>
+                <input class="input" type="date" id="stop_end" name="end_date"
+                       value="{{ trip.end_date.isoformat() if trip.end_date else '' }}">
+            </div>
+            <button class="btn btn-accent" type="submit">+ Add section</button>
+        </div>
+    </form>
+</div>
+
+{% if not stops %}
+    <div class="empty">
+        <p>A trip needs at least one city before it has an itinerary or a budget.</p>
+    </div>
+{% endif %}
+
+{% endblock %}
