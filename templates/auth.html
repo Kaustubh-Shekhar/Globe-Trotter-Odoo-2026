@@ -62,12 +62,16 @@
 
         <div class="avatar-lg" id="photoPreview">Photo</div>
 
-        <form id="signupForm" method="POST" action="{{ url_for('auth.signup') }}" novalidate>
+        <form id="signupForm" method="POST" action="{{ url_for('auth.signup') }}"
+              enctype="multipart/form-data" novalidate>
 
             <div class="field">
-                <label for="signupPhoto">Photo URL <span class="muted">(optional)</span></label>
-                <input class="input" type="url" id="signupPhoto" name="photo"
-                       placeholder="https://images.unsplash.com/photo-...">
+                <label for="signupPhoto">Profile photo <span class="muted">(optional)</span></label>
+                <input class="input" type="file" id="signupPhoto" name="photo_file"
+                       accept="image/png,image/jpeg,image/gif,image/webp">
+                <p class="muted" style="font-size:11.5px;margin:4px 0 0">
+                    PNG, JPG, GIF or WEBP · up to 4 MB
+                </p>
             </div>
 
             <div class="two-col">

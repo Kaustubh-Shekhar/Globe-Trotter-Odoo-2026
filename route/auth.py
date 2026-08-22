@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from extensions import db
 from models import User
+from helpers import pick_image
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -35,7 +36,8 @@ def signup():
     phone = (request.form.get("phone") or "").strip()
     city = (request.form.get("city") or "").strip()
     country = (request.form.get("country") or "").strip()
-    photo = (request.form.get("photo") or "").strip()
+    # an uploaded file wins; a pasted URL still works as a fallback
+    photo = pick_image(request.files.get("photo_file"), request.form.get("photo"))
     username = (request.form.get("username") or "").strip()
     password = request.form.get("password") or ""
     confirm = request.form.get("confirmPassword") or ""
@@ -62,7 +64,7 @@ def signup():
         phone=phone or None,
         city=city or None,
         country=country or None,
-        photo=photo or None,
+        photo=photo,
         username=_unique_username(username, email),
         password_hash=generate_password_hash(password),
     )

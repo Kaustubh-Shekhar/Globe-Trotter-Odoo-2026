@@ -24,7 +24,8 @@
     <div class="form-error">{{ error }}</div>
 {% endif %}
 
-<form method="POST" action="{{ url_for('trips.create_trip') }}">
+<form method="POST" action="{{ url_for('trips.create_trip') }}"
+      enctype="multipart/form-data">
 
     <div class="section">
         <span class="section-title">Plan a new trip</span>
@@ -57,7 +58,12 @@
         </div>
 
         <div class="field" style="margin-bottom:0">
-            <label for="cover_image">Cover image URL <span class="muted">(optional)</span></label>
+            <label for="cover_file">Cover image <span class="muted">(optional)</span></label>
+            <input class="input" type="file" id="cover_file" name="cover_file"
+                   accept="image/png,image/jpeg,image/gif,image/webp"
+                   style="margin-bottom:8px">
+            <label for="cover_image" class="muted" style="font-weight:500">
+                ...or paste a URL / pick a suggestion below</label>
             <input class="input" type="url" id="cover_image" name="cover_image"
                    placeholder="https://images.unsplash.com/photo-..."
                    value="{{ request.form.get('cover_image', '') }}">

@@ -5,7 +5,7 @@ from flask import (Blueprint, render_template, request, redirect,
 
 from extensions import db
 from models import City, Trip
-from helpers import login_required, current_user, parse_date
+from helpers import login_required, current_user, parse_date, pick_image
 
 trips_bp = Blueprint("trips", __name__)
 
@@ -44,17 +44,16 @@ def dashboard():
              .order_by(Trip.created_at.desc())
              .limit(3).all())
 
-    country = (request.args.get("country") or "").strip()
+    state = (request.args.get("state") or "").strip()
 
     cities = City.query
     if q:
         like = f"%{q}%"
         # search the state as well, so "Kerala" or "Rajasthan" finds cities
         cities = cities.filter(db.or_(City.name.ilike(like),
-                                      City.state.ilike(like),
-                                      City.country.ilike(like)))
-    if country:
-        cities = cities.filter(City.country == country)
+                                      City.state.ilike(like)))
+    if state:
+        cities = cities.filter(City.state == state)
 
     if sort == "name":
         cities = cities.order_by(City.name.asc())
@@ -67,13 +66,15 @@ def dashboard():
 
     popular_cities = cities.limit(12).all()
 
-    # distinct country list for the Filter dropdown
-    countries = [row[0] for row in
-                 db.session.query(City.country).distinct().order_by(City.country).all()]
+    # distinct states for the Filter dropdown
+    states = [row[0] for row in
+              db.session.query(City.state)
+              .filter(City.state.isnot(None))
+              .distinct().order_by(City.state).all()]
 
     return render_template("dashboard.html", user=user, trips=trips,
                            popular_cities=popular_cities, q=q, sort=sort,
-                           country=country, countries=countries)
+                           state=state, states=states)
 
 
 @trips_bp.route("/trips")
@@ -129,7 +130,9 @@ def create_trip():
     user = current_user()
     name = (request.form.get("name") or "").strip()
     description = (request.form.get("description") or "").strip()
-    cover_image = (request.form.get("cover_image") or "").strip()
+    # an uploaded file wins; the pasted URL / suggestion is the fallback
+    cover_image = pick_image(request.files.get("cover_file"),
+                             request.form.get("cover_image"))
     start_date = parse_date(request.form.get("start_date"))
     end_date = parse_date(request.form.get("end_date"))
 
@@ -145,7 +148,7 @@ def create_trip():
 
     trip = Trip(user_id=user.id, name=name, description=description,
                 start_date=start_date, end_date=end_date,
-                cover_image=cover_image or None)
+                cover_image=cover_image)
     db.session.add(trip)
     db.session.commit()
 

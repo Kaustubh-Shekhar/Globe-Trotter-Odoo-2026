@@ -45,11 +45,11 @@
 
 <form class="toolbar" method="GET" action="{{ url_for('trips.dashboard') }}">
     <input class="input search" type="search" name="q" value="{{ q }}"
-           placeholder="Search cities, states and countries...">
-    <select class="input" name="country" onchange="this.form.submit()">
-        <option value="">Filter: All countries</option>
-        {% for c in countries %}
-            <option value="{{ c }}" {{ 'selected' if country == c }}>Filter: {{ c }}</option>
+           placeholder="Search cities and states...">
+    <select class="input" name="state" onchange="this.form.submit()">
+        <option value="">Filter: All states</option>
+        {% for st in states %}
+            <option value="{{ st }}" {{ 'selected' if state == st }}>Filter: {{ st }}</option>
         {% endfor %}
     </select>
     <select class="input" name="sort" onchange="this.form.submit()">

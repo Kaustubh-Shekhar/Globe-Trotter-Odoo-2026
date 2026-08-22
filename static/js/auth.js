@@ -44,15 +44,28 @@ document.addEventListener("DOMContentLoaded", function () {
     var photoInput = document.getElementById("signupPhoto");
     var photoPreview = document.getElementById("photoPreview");
 
-    photoInput.addEventListener("input", function () {
-        var url = photoInput.value.trim();
-        if (url) {
-            photoPreview.style.backgroundImage = 'url("' + url + '")';
-            photoPreview.classList.add("has-image");
-        } else {
+    // show the chosen file in the circle before it is ever uploaded
+    photoInput.addEventListener("change", function () {
+        var file = photoInput.files && photoInput.files[0];
+
+        if (!file) {
             photoPreview.style.backgroundImage = "";
             photoPreview.classList.remove("has-image");
+            return;
         }
+
+        if (file.size > 4 * 1024 * 1024) {
+            showError(photoInput, "That image is over 4 MB. Pick a smaller one.");
+            photoInput.value = "";
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            photoPreview.style.backgroundImage = 'url("' + e.target.result + '")';
+            photoPreview.classList.add("has-image");
+        };
+        reader.readAsDataURL(file);
     });
 
     /* ---------- login ---------- */
