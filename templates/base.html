@@ -53,6 +53,79 @@
     {% block content %}{% endblock %}
 </div>
 
+<!-- Shared confirm dialog. Any form with data-confirm="..." uses this instead
+     of the browser's confirm(), which shows the raw host name. -->
+<div class="modal-backdrop" id="confirmBackdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <h3 id="confirmTitle">Are you sure?</h3>
+        <p class="muted" id="confirmBody">This cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" id="confirmCancel">Cancel</button>
+            <button class="btn btn-danger" type="button" id="confirmOk">Remove</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Any image that fails to load (dead Unsplash URL, a pasted link that rots,
+// an upload deleted off disk) is swapped for a gradient tile instead of the
+// browser's broken-image icon.
+document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (img.tagName !== "IMG" || img.dataset.fallbackApplied) { return; }
+    img.dataset.fallbackApplied = "1";
+
+    var ph = document.createElement("div");
+    ph.className = "placeholder-img " + (img.className || "");
+    ph.textContent = img.dataset.icon || "🌍";
+    ph.style.height = (img.offsetHeight || 104) + "px";
+    if (img.parentNode) { img.parentNode.replaceChild(ph, img); }
+}, true);
+
+(function () {
+    var backdrop = document.getElementById("confirmBackdrop");
+    var titleEl  = document.getElementById("confirmTitle");
+    var bodyEl   = document.getElementById("confirmBody");
+    var okBtn    = document.getElementById("confirmOk");
+    var pending  = null;
+
+    function close() {
+        backdrop.hidden = true;
+        pending = null;
+    }
+
+    document.addEventListener("submit", function (e) {
+        var form = e.target;
+        var message = form.getAttribute("data-confirm");
+        if (!message || form.dataset.confirmed === "yes") { return; }
+
+        e.preventDefault();
+        pending = form;
+        titleEl.textContent = form.getAttribute("data-confirm-title") || "Are you sure?";
+        bodyEl.textContent = message;
+        okBtn.textContent = form.getAttribute("data-confirm-ok") || "Remove";
+        backdrop.hidden = false;
+        okBtn.focus();
+    });
+
+    okBtn.addEventListener("click", function () {
+        if (!pending) { return; }
+        var form = pending;
+        form.dataset.confirmed = "yes";
+        close();
+        form.submit();
+    });
+
+    document.getElementById("confirmCancel").addEventListener("click", close);
+    backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) { close(); }
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !backdrop.hidden) { close(); }
+    });
+})();
+</script>
+
 {% block scripts %}{% endblock %}
 </body>
 </html>

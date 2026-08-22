@@ -20,14 +20,18 @@ def profile():
              .order_by(Trip.start_date.is_(None), Trip.start_date.asc())
              .all())
 
-    # screen 7 splits the user's trips into what is still ahead and what is done
-    preplanned = [t for t in trips
-                  if not t.end_date or t.end_date >= today]
-    previous = [t for t in trips
-                if t.end_date and t.end_date < today]
+    # same buckets as the My Trips screen, so the two pages never disagree
+    ongoing, upcoming, previous = [], [], []
+    for t in trips:
+        if t.start_date and t.end_date and t.start_date <= today <= t.end_date:
+            ongoing.append(t)
+        elif t.end_date and t.end_date < today:
+            previous.append(t)
+        else:
+            upcoming.append(t)
 
-    return render_template("profile.html", user=user,
-                           preplanned=preplanned, previous=previous)
+    return render_template("profile.html", user=user, ongoing=ongoing,
+                           upcoming=upcoming, previous=previous)
 
 
 @profile_bp.route("/profile/edit", methods=["POST"])

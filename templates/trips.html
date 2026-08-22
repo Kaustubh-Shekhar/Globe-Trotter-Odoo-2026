@@ -100,7 +100,9 @@
                             <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
                             <form method="POST"
                                   action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}"
-                                  onsubmit="return confirm('Delete this trip and everything in it?');"
+                                  data-confirm-title="Delete {{ trip.name }}?"
+                                  data-confirm="Every city, activity and cost in this trip will be deleted. This cannot be undone."
+                                  data-confirm-ok="Delete trip"
                                   style="display:inline">
                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                             </form>

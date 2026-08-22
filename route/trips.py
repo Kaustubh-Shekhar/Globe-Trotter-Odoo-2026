@@ -4,7 +4,7 @@ from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, abort)
 
 from extensions import db
-from models import City, Trip
+from models import City, Trip, Stop
 from helpers import login_required, current_user, parse_date, pick_image
 
 trips_bp = Blueprint("trips", __name__)
@@ -124,8 +124,15 @@ def my_trips():
 def create_trip():
     suggestions = City.query.order_by(City.popularity.desc()).limit(6).all()
 
+    # arriving from a destination tile on the dashboard
+    start_city = None
+    city_id = request.values.get("city", type=int)
+    if city_id:
+        start_city = City.query.get(city_id)
+
     if request.method == "GET":
-        return render_template("createTrip.html", error=None, suggestions=suggestions)
+        return render_template("createTrip.html", error=None,
+                               suggestions=suggestions, start_city=start_city)
 
     user = current_user()
     name = (request.form.get("name") or "").strip()
@@ -139,20 +146,31 @@ def create_trip():
     if not name:
         return render_template("createTrip.html",
                                error="Give your trip a name.",
-                               suggestions=suggestions)
+                               suggestions=suggestions, start_city=start_city)
 
     if start_date and end_date and end_date < start_date:
         return render_template("createTrip.html",
                                error="The end date cannot be before the start date.",
-                               suggestions=suggestions)
+                               suggestions=suggestions, start_city=start_city)
 
     trip = Trip(user_id=user.id, name=name, description=description,
                 start_date=start_date, end_date=end_date,
                 cover_image=cover_image)
     db.session.add(trip)
+    db.session.flush()
+
+    # a city picked on the dashboard becomes the first stop automatically
+    if start_city:
+        db.session.add(Stop(trip_id=trip.id, city_id=start_city.id,
+                            start_date=start_date, end_date=end_date,
+                            position=0))
+
     db.session.commit()
 
-    flash(f'"{trip.name}" created. Now add some cities.', "success")
+    if start_city:
+        flash(f'"{trip.name}" created, starting in {start_city.name}.', "success")
+    else:
+        flash(f'"{trip.name}" created. Now add some cities.', "success")
     # literal path: itinerary_bp lands later, and url_for would BuildError
     # until it does. This URL is correct either way.
     return redirect(f"/trips/{trip.id}/build")

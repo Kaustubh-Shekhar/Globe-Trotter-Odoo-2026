@@ -30,6 +30,14 @@
     <div class="section">
         <span class="section-title">Plan a new trip</span>
 
+        {% if start_city %}
+            <input type="hidden" name="city" value="{{ start_city.id }}">
+            <p class="muted" style="margin:0 0 12px">
+                Starting from <span class="badge badge-accent">{{ start_city.name }},
+                {{ start_city.region }}</span> — it will be added as your first stop.
+            </p>
+        {% endif %}
+
         <div class="field">
             <label for="name">Trip name</label>
             <input class="input" type="text" id="name" name="name"

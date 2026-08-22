@@ -69,9 +69,10 @@
     {% if popular_cities %}
         <div class="grid">
             {% for city in popular_cities %}
-                <div class="tile">
+                <a class="tile" href="{{ url_for('trips.create_trip', city=city.id) }}"
+                   title="Plan a trip starting in {{ city.name }}">
                     {% if city.image_url %}
-                        <img src="{{ city.image_url }}" alt="{{ city.name }}">
+                        <img src="{{ city.image_url }}" alt="{{ city.name }}" data-icon="🌍">
                     {% else %}
                         <div class="placeholder-img">🌍</div>
                     {% endif %}
@@ -81,7 +82,7 @@
                         <span class="badge">Popularity {{ city.popularity }}</span>
                         <span class="badge badge-accent">{{ "₹" * city.cost_index }}</span>
                     </div>
-                </div>
+                </a>
             {% endfor %}
         </div>
     {% else %}

@@ -109,7 +109,9 @@
                     </form>
                 </div>
                 <form method="POST" action="{{ url_for('itinerary.delete_stop', stop_id=stop.id) }}"
-                      onsubmit="return confirm('Remove {{ stop.city.name }} and everything in it?');">
+                      data-confirm-title="Remove {{ stop.city.name }}?"
+                      data-confirm="Its activities and costs will be deleted too. This cannot be undone."
+                      data-confirm-ok="Remove stop">
                     <button class="btn btn-sm btn-danger" type="submit">Remove</button>
                 </form>
             </div>

@@ -124,80 +124,59 @@
     </form>
 {% endif %}
 
-{# ---------------- preplanned trips ---------------- #}
+{# ---------------- trips, bucketed ---------------- #}
 
-<div class="section">
-    <span class="section-title">Preplanned Trips · {{ preplanned|length }}</span>
-
-    {% if preplanned %}
-        <div class="grid-3">
-            {% for trip in preplanned %}
-                <div class="tile trip-mini">
-                    {% if trip.cover_image %}
-                        <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
-                    {% else %}
-                        <div class="placeholder-img">🧳</div>
-                    {% endif %}
-                    <div class="tile-body">
-                        <h3>{{ trip.name }}</h3>
-                        <p class="muted" style="margin:0 0 6px">
-                            {% if trip.start_date %}
-                                {{ trip.start_date.strftime('%d %b %Y') }} —
-                                {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
-                            {% else %}
-                                Dates not set
-                            {% endif %}
-                        </p>
-                        <div>
-                            <span class="badge">{{ trip.stops|length }} stops</span>
-                            <span class="badge badge-accent">{{ trip.days }} days</span>
-                        </div>
-                        <div class="mini-actions">
-                            <a class="btn btn-sm" href="/trips/{{ trip.id }}/view">View</a>
-                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/build">Edit</a>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty">
-            <p>Nothing planned yet.</p>
-            <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
-        </div>
-    {% endif %}
-</div>
-
-{# ---------------- previous trips ---------------- #}
-
-<div class="section">
-    <span class="section-title">Previous Trips · {{ previous|length }}</span>
-
-    {% if previous %}
-        <div class="grid-3">
-            {% for trip in previous %}
-                <div class="tile trip-mini">
-                    {% if trip.cover_image %}
-                        <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
-                    {% else %}
-                        <div class="placeholder-img">🗺️</div>
-                    {% endif %}
-                    <div class="tile-body">
-                        <h3>{{ trip.name }}</h3>
-                        <p class="muted" style="margin:0 0 6px">
-                            {{ trip.start_date.strftime('%d %b %Y') }} —
-                            {{ trip.end_date.strftime('%d %b %Y') }}
-                        </p>
-                        <div class="mini-actions">
-                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+{% macro trip_grid(title, rows, empty_text, icon) %}
+    <div class="section">
+        <span class="section-title">{{ title }} · {{ rows|length }}</span>
+        {% if rows %}
+            <div class="grid-3">
+                {% for trip in rows %}
+                    <div class="tile trip-mini">
+                        {% if trip.cover_image %}
+                            <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                        {% else %}
+                            <div class="placeholder-img">{{ icon }}</div>
+                        {% endif %}
+                        <div class="tile-body">
+                            <h3>{{ trip.name }}</h3>
+                            <p class="muted" style="margin:0 0 6px">
+                                {% if trip.start_date %}
+                                    {{ trip.start_date.strftime('%d %b %Y') }} —
+                                    {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+                                {% else %}
+                                    Dates not set
+                                {% endif %}
+                            </p>
+                            <div>
+                                <span class="badge">{{ trip.stops|length }} stops</span>
+                                <span class="badge badge-accent">{{ trip.days }} days</span>
+                            </div>
+                            <div class="mini-actions">
+                                <a class="btn btn-sm" href="/trips/{{ trip.id }}/view">View</a>
+                                <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/build">Edit</a>
+                                <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty">No completed trips yet.</div>
-    {% endif %}
-</div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">
+                <p style="margin:0 0 8px">{{ empty_text }}</p>
+                {% if title == 'Upcoming Trips' %}
+                    <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% if ongoing %}
+    {{ trip_grid('Ongoing Trips', ongoing, 'Nothing in progress.', '✈') }}
+{% endif %}
+
+{{ trip_grid('Upcoming Trips', upcoming, 'Nothing planned yet.', '🧳') }}
+{{ trip_grid('Previous Trips', previous, 'No completed trips yet.', '🗺') }}
 
 {% endblock %}
