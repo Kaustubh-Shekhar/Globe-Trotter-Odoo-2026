@@ -44,11 +44,17 @@ def dashboard():
              .order_by(Trip.created_at.desc())
              .limit(3).all())
 
+    country = (request.args.get("country") or "").strip()
+
     cities = City.query
     if q:
         like = f"%{q}%"
+        # search the state as well, so "Kerala" or "Rajasthan" finds cities
         cities = cities.filter(db.or_(City.name.ilike(like),
+                                      City.state.ilike(like),
                                       City.country.ilike(like)))
+    if country:
+        cities = cities.filter(City.country == country)
 
     if sort == "name":
         cities = cities.order_by(City.name.asc())
@@ -59,10 +65,15 @@ def dashboard():
     else:
         cities = cities.order_by(City.popularity.desc())
 
-    popular_cities = cities.limit(10).all()
+    popular_cities = cities.limit(12).all()
+
+    # distinct country list for the Filter dropdown
+    countries = [row[0] for row in
+                 db.session.query(City.country).distinct().order_by(City.country).all()]
 
     return render_template("dashboard.html", user=user, trips=trips,
-                           popular_cities=popular_cities, q=q, sort=sort)
+                           popular_cities=popular_cities, q=q, sort=sort,
+                           country=country, countries=countries)
 
 
 @trips_bp.route("/trips")
