@@ -1,95 +1,126 @@
 {% extends "base.html" %}
 {% block title %}My Trips — GlobeTrotter{% endblock %}
+{% set active = 'trips' %}
 
 {% block styles %}
 <style>
-    .trip-row {
-        display: grid;
-        grid-template-columns: 150px 1fr auto;
-        gap: 18px;
-        align-items: center;
-    }
+    .trip-row { display: grid; grid-template-columns: 132px 1fr auto; gap: 16px; align-items: center; }
     @media (max-width: 700px) {
         .trip-row { grid-template-columns: 1fr; }
-        .trip-row .thumb { height: 130px; }
+        .trip-row .thumb, .trip-row .placeholder-img { height: 130px; }
     }
-    .thumb {
-        width: 100%; height: 96px; object-fit: cover;
-        border-radius: 10px; display: block; background: var(--line);
-    }
-    .thumb-placeholder {
-        width: 100%; height: 96px; border-radius: 10px;
-        background: linear-gradient(135deg, var(--primary), #43548f);
-        display: flex; align-items: center; justify-content: center;
-        color: #fff; font-size: 26px;
-    }
-    .trip-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .thumb { width: 100%; height: 84px; object-fit: cover; border-radius: 5px;
+             display: block; background: var(--line-soft); }
+    .trip-row .placeholder-img { height: 84px; border-radius: 5px; font-size: 20px; }
+    .trip-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .group-count { font-weight: 500; color: var(--muted); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="spread" style="margin-bottom:20px">
+<div class="spread" style="margin-bottom:14px">
     <div>
         <h1>My Trips</h1>
         <p class="muted" style="margin:0">
-            {{ trips|length }} trip{{ '' if trips|length == 1 else 's' }} planned
+            {{ trips|length }} trip{{ '' if trips|length == 1 else 's' }}
+            {%- if q %} matching "{{ q }}"{% endif %}
         </p>
     </div>
-    <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">Plan a new trip</a>
+    <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
 </div>
 
-{% if trips %}
-    {% for trip in trips %}
-        <div class="card">
-            <div class="trip-row">
+<form class="toolbar" method="GET" action="{{ url_for('trips.my_trips') }}">
+    <input class="input search" type="search" name="q" value="{{ q }}"
+           placeholder="Search your trips...">
 
-                {% if trip.cover_image %}
-                    <img class="thumb" src="{{ trip.cover_image }}" alt="{{ trip.name }}">
-                {% else %}
-                    <div class="thumb-placeholder">🌍</div>
-                {% endif %}
+    <select class="input" name="group" onchange="this.form.submit()">
+        <option value="status" {{ 'selected' if group == 'status' }}>Group by: Status</option>
+        <option value="none"   {{ 'selected' if group == 'none' }}>Group by: None</option>
+    </select>
 
-                <div>
-                    <h3 style="margin-bottom:4px">{{ trip.name }}</h3>
-                    <p class="muted" style="margin:0 0 8px">
-                        {% if trip.start_date %}
-                            {{ trip.start_date.strftime('%d %b %Y') }} —
-                            {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+    <select class="input" name="filter" onchange="this.form.submit()">
+        <option value="all"       {{ 'selected' if status_filter == 'all' }}>Filter: All</option>
+        <option value="Ongoing"   {{ 'selected' if status_filter == 'Ongoing' }}>Filter: Ongoing</option>
+        <option value="Up-coming" {{ 'selected' if status_filter == 'Up-coming' }}>Filter: Up-coming</option>
+        <option value="Completed" {{ 'selected' if status_filter == 'Completed' }}>Filter: Completed</option>
+    </select>
+
+    <select class="input" name="sort" onchange="this.form.submit()">
+        <option value="start"   {{ 'selected' if sort == 'start' }}>Sort by: Start date</option>
+        <option value="name"    {{ 'selected' if sort == 'name' }}>Sort by: Name</option>
+        <option value="created" {{ 'selected' if sort == 'created' }}>Sort by: Recently added</option>
+    </select>
+
+    <button class="btn btn-ghost" type="submit">Apply</button>
+</form>
+
+{% if groups %}
+    {% for group_name, group_trips in groups %}
+        <div class="section">
+            <span class="section-title">
+                {{ group_name }} <span class="group-count">· {{ group_trips|length }}</span>
+            </span>
+
+            {% for trip in group_trips %}
+                <div class="card" style="margin-bottom:10px">
+                    <div class="trip-row">
+
+                        {% if trip.cover_image %}
+                            <img class="thumb" src="{{ trip.cover_image }}" alt="{{ trip.name }}">
                         {% else %}
-                            Dates not set
+                            <div class="placeholder-img">🧳</div>
                         {% endif %}
-                    </p>
-                    {% if trip.description %}
-                        <p class="muted" style="margin:0 0 8px">{{ trip.description }}</p>
-                    {% endif %}
-                    <span class="badge">{{ trip.stops|length }} stops</span>
-                    <span class="badge badge-accent">{{ trip.days }} days</span>
-                    {% if trip.is_public %}
-                        <span class="badge">Shared</span>
-                    {% endif %}
-                </div>
 
-                <div class="trip-actions">
-                    <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
-                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
-                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
-                    <form method="POST"
-                          action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}"
-                          onsubmit="return confirm('Delete \'{{ trip.name }}\' and everything in it?');"
-                          style="display:inline">
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                </div>
+                        <div>
+                            <h3 style="margin-bottom:3px">{{ trip.name }}</h3>
+                            <p class="muted" style="margin:0 0 6px">
+                                {% if trip.start_date %}
+                                    {{ trip.start_date.strftime('%d %b %Y') }} —
+                                    {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+                                {% else %}
+                                    Dates not set
+                                {% endif %}
+                            </p>
+                            {% if trip.description %}
+                                <p class="muted" style="margin:0 0 7px">{{ trip.description }}</p>
+                            {% endif %}
+                            <div>
+                                {% set status = trip_status(trip) %}
+                                <span class="badge {{ 'badge-ok' if status == 'Ongoing' else 'badge-live' if status == 'Up-coming' }}">{{ status }}</span>
+                                <span class="badge">{{ trip.stops|length }} stops</span>
+                                <span class="badge badge-accent">{{ trip.days }} days</span>
+                                {% if trip.is_public %}<span class="badge">Shared</span>{% endif %}
+                            </div>
+                        </div>
 
-            </div>
+                        <div class="trip-actions">
+                            <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
+                            <form method="POST"
+                                  action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}"
+                                  onsubmit="return confirm('Delete this trip and everything in it?');"
+                                  style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     {% endfor %}
 {% else %}
     <div class="card empty">
-        <p style="font-size:34px;margin:0 0 6px">🧳</p>
-        <p>You haven't planned anything yet.</p>
-        <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">Plan your first trip</a>
+        <p style="font-size:32px;margin:0 0 6px">🧳</p>
+        {% if q or status_filter != 'all' %}
+            <p>No trips matched those filters.</p>
+            <a class="btn btn-ghost" href="{{ url_for('trips.my_trips') }}">Clear filters</a>
+        {% else %}
+            <p>You haven't planned anything yet.</p>
+            <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">Plan your first trip</a>
+        {% endif %}
     </div>
 {% endif %}
 

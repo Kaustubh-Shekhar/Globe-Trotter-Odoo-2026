@@ -1,76 +1,115 @@
 {% extends "base.html" %}
 {% block title %}Plan a Trip — GlobeTrotter{% endblock %}
+{% set active = 'new' %}
 
 {% block styles %}
 <style>
-    .form-card { max-width: 620px; margin: 0 auto; }
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 560px) { .two-col { grid-template-columns: 1fr; } }
     .form-error {
         background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B;
-        border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 16px;
+        border-radius: 6px; padding: 9px 13px; font-size: 13.5px; margin-bottom: 14px;
     }
+    .suggest-tile { cursor: pointer; }
+    .suggest-tile.picked { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,74,.15); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="form-card">
+<h1>Plan a new trip</h1>
+<p class="muted" style="margin-bottom:18px">
+    Start with the basics. You'll add cities and activities next.
+</p>
 
-    <h1>Plan a new trip</h1>
-    <p class="muted" style="margin-bottom:20px">
-        Start with the basics. You'll add cities and activities next.
-    </p>
+{% if error %}
+    <div class="form-error">{{ error }}</div>
+{% endif %}
 
-    {% if error %}
-        <div class="form-error">{{ error }}</div>
-    {% endif %}
+<form method="POST" action="{{ url_for('trips.create_trip') }}">
 
-    <div class="card">
-        <form method="POST" action="{{ url_for('trips.create_trip') }}">
+    <div class="section">
+        <span class="section-title">Plan a new trip</span>
 
+        <div class="field">
+            <label for="name">Trip name</label>
+            <input class="input" type="text" id="name" name="name"
+                   placeholder="Europe 2026" required
+                   value="{{ request.form.get('name', '') }}">
+        </div>
+
+        <div class="field">
+            <label for="description">Description <span class="muted">(optional)</span></label>
+            <textarea class="input" id="description" name="description" rows="2"
+                      placeholder="Three cities, ten days, one very tired camera."
+                      >{{ request.form.get('description', '') }}</textarea>
+        </div>
+
+        <div class="two-col">
             <div class="field">
-                <label for="name">Trip name</label>
-                <input class="input" type="text" id="name" name="name"
-                       placeholder="Europe 2026" required
-                       value="{{ request.form.get('name', '') }}">
+                <label for="start_date">Start Date</label>
+                <input class="input" type="date" id="start_date" name="start_date"
+                       value="{{ request.form.get('start_date', '') }}">
             </div>
-
             <div class="field">
-                <label for="description">Description <span class="muted">(optional)</span></label>
-                <textarea class="input" id="description" name="description" rows="3"
-                          placeholder="Three cities, ten days, one very tired camera."
-                          >{{ request.form.get('description', '') }}</textarea>
+                <label for="end_date">End Date</label>
+                <input class="input" type="date" id="end_date" name="end_date"
+                       value="{{ request.form.get('end_date', '') }}">
             </div>
+        </div>
 
-            <div class="two-col">
-                <div class="field">
-                    <label for="start_date">Start date</label>
-                    <input class="input" type="date" id="start_date" name="start_date"
-                           value="{{ request.form.get('start_date', '') }}">
-                </div>
-                <div class="field">
-                    <label for="end_date">End date</label>
-                    <input class="input" type="date" id="end_date" name="end_date"
-                           value="{{ request.form.get('end_date', '') }}">
-                </div>
-            </div>
-
-            <div class="field">
-                <label for="cover_image">Cover image URL <span class="muted">(optional)</span></label>
-                <input class="input" type="url" id="cover_image" name="cover_image"
-                       placeholder="https://images.unsplash.com/photo-..."
-                       value="{{ request.form.get('cover_image', '') }}">
-            </div>
-
-            <div class="row" style="margin-top:18px">
-                <button type="submit" class="btn btn-accent">Create trip</button>
-                <a class="btn btn-ghost" href="{{ url_for('trips.my_trips') }}">Cancel</a>
-            </div>
-
-        </form>
+        <div class="field" style="margin-bottom:0">
+            <label for="cover_image">Cover image URL <span class="muted">(optional)</span></label>
+            <input class="input" type="url" id="cover_image" name="cover_image"
+                   placeholder="https://images.unsplash.com/photo-..."
+                   value="{{ request.form.get('cover_image', '') }}">
+        </div>
     </div>
 
-</div>
+    <div class="section">
+        <span class="section-title">Suggestions for places to visit</span>
+        <p class="muted" style="margin:0 0 12px">
+            Click one to use its photo as your cover. You'll pick the actual cities
+            in the itinerary builder.
+        </p>
 
+        <div class="grid">
+            {% for city in suggestions %}
+                <div class="tile suggest-tile" data-image="{{ city.image_url or '' }}">
+                    {% if city.image_url %}
+                        <img src="{{ city.image_url }}" alt="{{ city.name }}">
+                    {% else %}
+                        <div class="placeholder-img">🌍</div>
+                    {% endif %}
+                    <div class="tile-body">
+                        <h3>{{ city.name }}</h3>
+                        <p class="muted" style="margin:0">{{ city.country }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row">
+        <button type="submit" class="btn btn-accent">Create trip</button>
+        <a class="btn btn-ghost" href="{{ url_for('trips.my_trips') }}">Cancel</a>
+    </div>
+
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // clicking a suggestion just fills the cover image field
+    document.querySelectorAll(".suggest-tile").forEach(function (tile) {
+        tile.addEventListener("click", function () {
+            var url = tile.dataset.image;
+            if (!url) { return; }
+            document.getElementById("cover_image").value = url;
+            document.querySelectorAll(".suggest-tile").forEach(function (t) {
+                t.classList.remove("picked");
+            });
+            tile.classList.add("picked");
+        });
+    });
+</script>
 {% endblock %}

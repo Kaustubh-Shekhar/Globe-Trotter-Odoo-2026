@@ -1,264 +1,141 @@
-document.addEventListener("DOMContentLoaded", () => {
+/* Login / Registration — client-side validation only.
+   When the form is valid it submits normally (form POST -> redirect -> flash);
+   the server is the real authority on whether the credentials are good. */
 
-    const loginView = document.getElementById("loginView");
-    const signupView = document.getElementById("signupView");
+document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
 
-    const showSignup = document.getElementById("showSignup");
-    const showLogin = document.getElementById("showLogin");
+    var loginView = document.getElementById("loginView");
+    var signupView = document.getElementById("signupView");
+    var loginForm = document.getElementById("loginForm");
+    var signupForm = document.getElementById("signupForm");
+    var authWrap = document.querySelector(".auth-wrap");
 
-    const loginForm = document.getElementById("loginForm");
-    const signupForm = document.getElementById("signupForm");
+    /* ---------- view toggle ---------- */
 
-    const forgotButton = document.getElementById("forgotButton");
-
-
-    /* =========================================
-       SWITCH LOGIN / SIGNUP
-    ========================================= */
-
-    showSignup.addEventListener("click", () => {
-
-        loginView.classList.remove("active");
-        signupView.classList.add("active");
-
+    function show(view) {
+        var signup = view === "signup";
+        loginView.hidden = signup;
+        signupView.hidden = !signup;
+        if (authWrap) {
+            authWrap.style.maxWidth = signup ? "560px" : "420px";
+        }
         clearErrors();
-
-    });
-
-
-    showLogin.addEventListener("click", () => {
-
-        signupView.classList.remove("active");
-        loginView.classList.add("active");
-
-        clearErrors();
-
-    });
-
-
-    /* =========================================
-       PASSWORD VISIBILITY
-    ========================================= */
-
-    document.querySelectorAll(".password-toggle").forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            const targetId = button.dataset.target;
-            const input = document.getElementById(targetId);
-
-            if (input.type === "password") {
-
-                input.type = "text";
-                button.textContent = "Hide";
-
-            } else {
-
-                input.type = "password";
-                button.textContent = "Show";
-
-            }
-
-        });
-
-    });
-
-
-    /* =========================================
-       LOGIN
-    ========================================= */
-
-    loginForm.addEventListener("submit", (event) => {
-
-        event.preventDefault();
-
-        clearErrors();
-
-        const email = document.getElementById("loginEmail");
-        const password = document.getElementById("loginPassword");
-
-        let valid = true;
-
-
-        if (!isValidEmail(email.value.trim())) {
-
-            showError(
-                email,
-                "Please enter a valid email address."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (password.value.length === 0) {
-
-            showError(
-                password,
-                "Please enter your password."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (valid) {
-
-            loginForm.submit();
-
-        }
-
-    });
-
-
-    /* =========================================
-       SIGNUP
-    ========================================= */
-
-    signupForm.addEventListener("submit", (event) => {
-
-        event.preventDefault();
-
-        clearErrors();
-
-        const name = document.getElementById("signupName");
-        const email = document.getElementById("signupEmail");
-        const password = document.getElementById("signupPassword");
-        const confirmPassword = document.getElementById("confirmPassword");
-
-        let valid = true;
-
-
-        if (name.value.trim().length < 2) {
-
-            showError(
-                name,
-                "Please enter your name."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (!isValidEmail(email.value.trim())) {
-
-            showError(
-                email,
-                "Please enter a valid email address."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (password.value.length < 8) {
-
-            showError(
-                password,
-                "Password must contain at least 8 characters."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (confirmPassword.value !== password.value) {
-
-            showError(
-                confirmPassword,
-                "Passwords do not match."
-            );
-
-            valid = false;
-
-        }
-
-
-        if (valid) {
-
-            signupForm.submit();
-
-        }
-
-    });
-
-
-    /* =========================================
-       FORGOT PASSWORD
-    ========================================= */
-
-    forgotButton.addEventListener("click", () => {
-
-        const email = document.getElementById("loginEmail");
-
-        clearErrors();
-
-        if (!isValidEmail(email.value.trim())) {
-
-            showError(
-                email,
-                "Enter your email first to reset your password."
-            );
-
-            email.focus();
-
-            return;
-
-        }
-
-        showSuccess(
-            "Password reset functionality will be connected to the backend."
-        );
-
-    });
-
-
-    /* =========================================
-       HELPERS
-    ========================================= */
-
-    function isValidEmail(email) {
-
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
+        window.scrollTo(0, 0);
     }
 
+    document.getElementById("showSignup").addEventListener("click", function (e) {
+        e.preventDefault();
+        show("signup");
+    });
+
+    document.getElementById("showLogin").addEventListener("click", function (e) {
+        e.preventDefault();
+        show("login");
+    });
+
+    // if the server bounced a signup back, reopen the registration view
+    if (window.location.hash === "#register") {
+        show("signup");
+    }
+
+    /* ---------- photo preview ---------- */
+
+    var photoInput = document.getElementById("signupPhoto");
+    var photoPreview = document.getElementById("photoPreview");
+
+    photoInput.addEventListener("input", function () {
+        var url = photoInput.value.trim();
+        if (url) {
+            photoPreview.style.backgroundImage = 'url("' + url + '")';
+            photoPreview.classList.add("has-image");
+        } else {
+            photoPreview.style.backgroundImage = "";
+            photoPreview.classList.remove("has-image");
+        }
+    });
+
+    /* ---------- login ---------- */
+
+    loginForm.addEventListener("submit", function (event) {
+        clearErrors();
+
+        var username = document.getElementById("loginUsername");
+        var password = document.getElementById("loginPassword");
+        var valid = true;
+
+        if (username.value.trim().length === 0) {
+            showError(username, "Enter your username or email.");
+            valid = false;
+        }
+        if (password.value.length === 0) {
+            showError(password, "Enter your password.");
+            valid = false;
+        }
+
+        if (!valid) {
+            event.preventDefault();
+        }
+    });
+
+    /* ---------- signup ---------- */
+
+    signupForm.addEventListener("submit", function (event) {
+        clearErrors();
+
+        var first = document.getElementById("firstName");
+        var last = document.getElementById("lastName");
+        var email = document.getElementById("signupEmail");
+        var password = document.getElementById("signupPassword");
+        var confirm = document.getElementById("confirmPassword");
+        var valid = true;
+
+        if (first.value.trim().length < 2) {
+            showError(first, "Enter your first name.");
+            valid = false;
+        }
+        if (last.value.trim().length < 1) {
+            showError(last, "Enter your last name.");
+            valid = false;
+        }
+        if (!isValidEmail(email.value.trim())) {
+            showError(email, "Enter a valid email address.");
+            valid = false;
+        }
+        if (password.value.length < 8) {
+            showError(password, "Password must be at least 8 characters.");
+            valid = false;
+        }
+        if (confirm.value !== password.value) {
+            showError(confirm, "Passwords do not match.");
+            valid = false;
+        }
+
+        if (!valid) {
+            event.preventDefault();
+        }
+    });
+
+    /* ---------- helpers ---------- */
+
+    function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
 
     function showError(input, message) {
-
         input.classList.add("invalid");
-
-        const group = input.closest(".input-group");
-
-        const error = group.querySelector(".error-message");
-
-        error.textContent = message;
-
+        var slot = document.querySelector('.error-message[data-for="' + input.id + '"]');
+        if (slot) {
+            slot.textContent = message;
+        }
     }
-
 
     function clearErrors() {
-
-        document.querySelectorAll(".error-message").forEach(error => {
-            error.textContent = "";
+        document.querySelectorAll(".error-message").forEach(function (el) {
+            el.textContent = "";
         });
-
-        document.querySelectorAll("input").forEach(input => {
-            input.classList.remove("invalid");
+        document.querySelectorAll(".input").forEach(function (el) {
+            el.classList.remove("invalid");
         });
-
     }
-
-
-    function showSuccess(message) {
-
-        alert(message);
-
-    }
-
 });

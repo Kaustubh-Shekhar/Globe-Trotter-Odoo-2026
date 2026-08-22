@@ -1,85 +1,131 @@
 {% extends "base.html" %}
-{% block title %}Dashboard — GlobeTrotter{% endblock %}
+{% block title %}Home — GlobeTrotter{% endblock %}
+{% set active = 'dashboard' %}
 
 {% block styles %}
 <style>
-    .hero {
-        background: linear-gradient(135deg, var(--primary), #43548f);
-        color: #fff;
+    .banner {
+        position: relative;
+        height: 210px;
+        border: 1px solid var(--line);
         border-radius: var(--radius);
-        padding: 28px 26px;
-        margin-bottom: 26px;
+        overflow: hidden;
+        margin-bottom: 18px;
+        background: linear-gradient(135deg, var(--primary), #4a5b93);
+        display: flex; align-items: center; justify-content: center;
+        text-align: center;
     }
-    .hero h1 { color: #fff; }
-    .hero p { margin: 6px 0 18px; opacity: .85; font-size: 14px; }
-    .section-head { margin: 30px 0 14px; }
-    .city-card .card-img { height: 120px; }
+    .banner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .banner .veil { position: absolute; inset: 0; background: rgba(26,31,54,.55); }
+    .banner .banner-text { position: relative; color: #fff; padding: 0 20px; }
+    .banner h1 { color: #fff; font-size: 27px; margin-bottom: 6px; }
+    .banner p { margin: 0 0 16px; opacity: .9; font-size: 14px; }
+
+    .trip-mini { display: flex; flex-direction: column; height: 100%; }
+    .trip-mini .tile-body { flex: 1; display: flex; flex-direction: column; }
+    .trip-mini .mini-actions { margin-top: auto; padding-top: 10px; display: flex; gap: 6px; }
+
+    .plan-cta { display: flex; justify-content: flex-end; margin-top: 14px; }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="hero">
-    <h1>Hey {{ user.first_name }} 👋</h1>
-    <p>Where are we going next?</p>
-    <a class="btn btn-accent" href="/trips/new">Plan a new trip</a>
+<div class="banner">
+    {% if trips and trips[0].cover_image %}
+        <img src="{{ trips[0].cover_image }}" alt="">
+        <div class="veil"></div>
+    {% endif %}
+    <div class="banner-text">
+        <h1>Hey {{ user.first_name }}, where to next?</h1>
+        <p>Build a multi-city itinerary, activity by activity, and watch the budget as you go.</p>
+        <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
+    </div>
 </div>
 
-<div class="spread section-head">
-    <h2 style="margin:0">Your recent trips</h2>
-    <a class="muted" href="/trips">View all →</a>
-</div>
+<form class="toolbar" method="GET" action="{{ url_for('trips.dashboard') }}">
+    <input class="input search" type="search" name="q" value="{{ q }}"
+           placeholder="Search cities and countries...">
+    <select class="input" name="sort" onchange="this.form.submit()">
+        <option value="popularity" {{ 'selected' if sort == 'popularity' }}>Sort by: Popularity</option>
+        <option value="name"       {{ 'selected' if sort == 'name' }}>Sort by: Name</option>
+        <option value="cost_low"   {{ 'selected' if sort == 'cost_low' }}>Sort by: Cheapest</option>
+        <option value="cost_high"  {{ 'selected' if sort == 'cost_high' }}>Sort by: Most luxurious</option>
+    </select>
+    <button class="btn btn-ghost" type="submit">Search</button>
+    {% if q %}
+        <a class="btn btn-ghost" href="{{ url_for('trips.dashboard') }}">Clear</a>
+    {% endif %}
+</form>
 
-{% if trips %}
-    <div class="grid">
-        {% for trip in trips %}
-            <div class="card">
-                {% if trip.cover_image %}
-                    <img class="card-img" src="{{ trip.cover_image }}" alt="{{ trip.name }}">
-                {% endif %}
-                <h3>{{ trip.name }}</h3>
-                <p class="muted">
-                    {% if trip.start_date %}
-                        {{ trip.start_date.strftime('%d %b %Y') }} —
-                        {{ trip.end_date.strftime('%d %b %Y') }}
+<div class="section">
+    <span class="section-title">Top Regional Selections</span>
+    {% if popular_cities %}
+        <div class="grid">
+            {% for city in popular_cities %}
+                <div class="tile">
+                    {% if city.image_url %}
+                        <img src="{{ city.image_url }}" alt="{{ city.name }}">
                     {% else %}
-                        Dates not set
+                        <div class="placeholder-img">🌍</div>
                     {% endif %}
-                </p>
-                <p class="muted">
-                    <span class="badge">{{ trip.stops|length }} stops</span>
-                    <span class="badge badge-accent">{{ trip.days }} days</span>
-                </p>
-                <div class="row" style="margin-top:12px">
-                    <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
-                    <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                    <div class="tile-body">
+                        <h3>{{ city.name }}</h3>
+                        <p class="muted" style="margin:0 0 6px">{{ city.country }}</p>
+                        <span class="badge">Popularity {{ city.popularity }}</span>
+                        <span class="badge badge-accent">{{ "₹" * city.cost_index }}</span>
+                    </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="card empty">
-        <p>No trips yet. Your first adventure is one click away.</p>
-        <a class="btn btn-accent" href="/trips/new">Plan a trip</a>
-    </div>
-{% endif %}
-
-<div class="section-head">
-    <h2 style="margin:0">Popular destinations</h2>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">No cities matched "{{ q }}".</div>
+    {% endif %}
 </div>
 
-<div class="grid">
-    {% for city in popular_cities %}
-        <div class="card city-card">
-            {% if city.image_url %}
-                <img class="card-img" src="{{ city.image_url }}" alt="{{ city.name }}">
-            {% endif %}
-            <h3>{{ city.name }}</h3>
-            <p class="muted">{{ city.country }}</p>
-            <span class="badge">Popularity {{ city.popularity }}</span>
-            <span class="badge badge-accent">{{ "₹" * city.cost_index }}</span>
+<div class="section">
+    <span class="section-title">Previous Trips</span>
+    {% if trips %}
+        <div class="grid-3">
+            {% for trip in trips %}
+                <div class="tile trip-mini">
+                    {% if trip.cover_image %}
+                        <img src="{{ trip.cover_image }}" alt="{{ trip.name }}">
+                    {% else %}
+                        <div class="placeholder-img">🧳</div>
+                    {% endif %}
+                    <div class="tile-body">
+                        <h3>{{ trip.name }}</h3>
+                        <p class="muted" style="margin:0 0 6px">
+                            {% if trip.start_date %}
+                                {{ trip.start_date.strftime('%d %b %Y') }} —
+                                {{ trip.end_date.strftime('%d %b %Y') if trip.end_date else '?' }}
+                            {% else %}
+                                Dates not set
+                            {% endif %}
+                        </p>
+                        <div>
+                            <span class="badge">{{ trip.stops|length }} stops</span>
+                            <span class="badge badge-accent">{{ trip.days }} days</span>
+                        </div>
+                        <div class="mini-actions">
+                            <a class="btn btn-sm" href="/trips/{{ trip.id }}/build">Build</a>
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/view">View</a>
+                            <a class="btn btn-sm btn-ghost" href="/trips/{{ trip.id }}/budget">Budget</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
+        <div class="plan-cta">
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('trips.my_trips') }}">View all trips →</a>
+        </div>
+    {% else %}
+        <div class="empty">
+            <p>No trips yet. Your first adventure is one click away.</p>
+            <a class="btn btn-accent" href="{{ url_for('trips.create_trip') }}">+ Plan a trip</a>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}

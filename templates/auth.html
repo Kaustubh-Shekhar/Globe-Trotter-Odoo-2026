@@ -1,368 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>GlobeTrotter</title>
-
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
-        rel="stylesheet"
-    >
-
-    <!-- CSS -->
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/auth.css') }}"
-    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 </head>
+<body class="auth-body">
 
-<body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="auth-flashes">
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category or 'info' }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="auth-flashes">
-                {% for category, message in messages %}
-                    <div class="auth-flash auth-flash-{{ category or 'info' }}">{{ message }}</div>
-                {% endfor %}
+<div class="auth-wrap">
+
+    <div class="auth-brand">GlobeTrotter</div>
+    <p class="auth-tagline">Plan multi-city trips, activity by activity.</p>
+
+    <!-- ================= SCREEN 1 — LOGIN ================= -->
+    <div class="auth-card" id="loginView">
+
+        <div class="avatar-lg">Photo</div>
+
+        <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}" novalidate>
+
+            <div class="field">
+                <label for="loginUsername">Username</label>
+                <input class="input" type="text" id="loginUsername" name="username"
+                       placeholder="username or email" autocomplete="username">
+                <div class="error-message" data-for="loginUsername"></div>
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <main class="auth-page">
-
-        <!-- LEFT SIDE -->
-        <section class="visual-section">
-
-            <div class="overlay"></div>
-
-            <div class="brand">
-                <div class="brand-icon">✦</div>
-                <span>GlobeTrotter</span>
+            <div class="field">
+                <label for="loginPassword">Password</label>
+                <input class="input" type="password" id="loginPassword" name="password"
+                       placeholder="••••••••" autocomplete="current-password">
+                <div class="error-message" data-for="loginPassword"></div>
             </div>
 
-            <div class="visual-content">
+            <button type="submit" class="btn btn-accent btn-block">Login</button>
 
-                <p class="eyebrow">YOUR JOURNEY STARTS HERE</p>
+        </form>
 
-                <h1>
-                    Go somewhere<br>
-                    <span>you've never been.</span>
-                </h1>
+        <p class="auth-switch">
+            New here? <a href="#" id="showSignup">Register</a>
+        </p>
 
-                <p class="visual-description">
-                    Plan unforgettable journeys, discover amazing places,
-                    and bring every part of your adventure together.
-                </p>
+        <p class="auth-demo">Demo account — <strong>demo</strong> / <strong>demo1234</strong></p>
 
-                <div class="destination-pills">
-                    <span>Paris</span>
-                    <span>Tokyo</span>
-                    <span>Bali</span>
-                    <span>New York</span>
+    </div>
+
+    <!-- ================= SCREEN 2 — REGISTRATION ================= -->
+    <div class="auth-card auth-card-wide" id="signupView" hidden>
+
+        <div class="avatar-lg" id="photoPreview">Photo</div>
+
+        <form id="signupForm" method="POST" action="{{ url_for('auth.signup') }}" novalidate>
+
+            <div class="field">
+                <label for="signupPhoto">Photo URL <span class="muted">(optional)</span></label>
+                <input class="input" type="url" id="signupPhoto" name="photo"
+                       placeholder="https://images.unsplash.com/photo-...">
+            </div>
+
+            <div class="two-col">
+                <div class="field">
+                    <label for="firstName">First Name</label>
+                    <input class="input" type="text" id="firstName" name="first_name" placeholder="Kaustubh">
+                    <div class="error-message" data-for="firstName"></div>
                 </div>
-
-            </div>
-
-            <div class="visual-footer">
-                <span>✦</span>
-                <span>Plan. Explore. Experience.</span>
-            </div>
-
-        </section>
-
-
-        <!-- RIGHT SIDE -->
-        <section class="form-section">
-
-            <div class="form-container">
-
-                <!-- LOGIN -->
-                <div class="form-view active" id="loginView">
-
-                    <div class="mobile-brand">
-                        <div class="brand-icon">✦</div>
-                        <span>GlobeTrotter</span>
-                    </div>
-
-                    <div class="form-header">
-
-                        <p class="form-eyebrow">WELCOME BACK</p>
-
-                        <h2>Let's continue<br>your journey.</h2>
-
-                        <p>
-                            Log in to access your trips and adventures.
-                        </p>
-
-                    </div>
-
-
-                    <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}" novalidate>
-
-                        <div class="input-group">
-
-                            <label for="loginEmail">
-                                Email address
-                            </label>
-
-                            <input
-                                type="email"
-                                id="loginEmail"
-                                name="email"
-                                placeholder="you@example.com"
-                                autocomplete="email"
-                            >
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <div class="input-group">
-
-                            <div class="label-row">
-
-                                <label for="loginPassword">
-                                    Password
-                                </label>
-
-                                <button
-                                    type="button"
-                                    class="forgot-button"
-                                    id="forgotButton"
-                                >
-                                    Forgot password?
-                                </button>
-
-                            </div>
-
-                            <div class="password-wrapper">
-
-                                <input
-                                    type="password"
-                                    id="loginPassword"
-                                    name="password"
-                                    placeholder="Enter your password"
-                                    autocomplete="current-password"
-                                >
-
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="loginPassword"
-                                >
-                                    Show
-                                </button>
-
-                            </div>
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <button
-                            type="submit"
-                            class="primary-button"
-                        >
-                            Log in
-                            <span>→</span>
-                        </button>
-
-                    </form>
-
-
-                    <div class="divider">
-                        <span>or</span>
-                    </div>
-
-
-                    <p class="switch-text">
-
-                        Don't have an account?
-
-                        <button
-                            type="button"
-                            class="switch-button"
-                            id="showSignup"
-                        >
-                            Create one
-                        </button>
-
-                    </p>
-
+                <div class="field">
+                    <label for="lastName">Last Name</label>
+                    <input class="input" type="text" id="lastName" name="last_name" placeholder="Shekhar">
+                    <div class="error-message" data-for="lastName"></div>
                 </div>
-
-
-                <!-- SIGN UP -->
-                <div class="form-view" id="signupView">
-
-                    <div class="mobile-brand">
-                        <div class="brand-icon">✦</div>
-                        <span>GlobeTrotter</span>
-                    </div>
-
-                    <div class="form-header">
-
-                        <p class="form-eyebrow">START EXPLORING</p>
-
-                        <h2>Create your<br>travel account.</h2>
-
-                        <p>
-                            Your next adventure is just a few steps away.
-                        </p>
-
-                    </div>
-
-
-                    <form id="signupForm" method="POST" action="{{ url_for('auth.signup') }}" novalidate>
-
-                        <div class="input-group">
-
-                            <label for="signupName">
-                                Full name
-                            </label>
-
-                            <input
-                                type="text"
-                                id="signupName"
-                                name="name"
-                                placeholder="Your name"
-                                autocomplete="name"
-                            >
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <div class="input-group">
-
-                            <label for="signupEmail">
-                                Email address
-                            </label>
-
-                            <input
-                                type="email"
-                                id="signupEmail"
-                                name="email"
-                                placeholder="you@example.com"
-                                autocomplete="email"
-                            >
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <div class="input-group">
-
-                            <label for="signupPassword">
-                                Password
-                            </label>
-
-                            <div class="password-wrapper">
-
-                                <input
-                                    type="password"
-                                    id="signupPassword"
-                                    name="password"
-                                    placeholder="At least 8 characters"
-                                    autocomplete="new-password"
-                                >
-
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="signupPassword"
-                                >
-                                    Show
-                                </button>
-
-                            </div>
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <div class="input-group">
-
-                            <label for="confirmPassword">
-                                Confirm password
-                            </label>
-
-                            <div class="password-wrapper">
-
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    placeholder="Repeat your password"
-                                    autocomplete="new-password"
-                                >
-
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="confirmPassword"
-                                >
-                                    Show
-                                </button>
-
-                            </div>
-
-                            <small class="error-message"></small>
-
-                        </div>
-
-
-                        <button
-                            type="submit"
-                            class="primary-button"
-                        >
-                            Create account
-                            <span>→</span>
-                        </button>
-
-                    </form>
-
-
-                    <p class="switch-text">
-
-                        Already have an account?
-
-                        <button
-                            type="button"
-                            class="switch-button"
-                            id="showLogin"
-                        >
-                            Log in
-                        </button>
-
-                    </p>
-
-                </div>
-
             </div>
 
-        </section>
+            <div class="two-col">
+                <div class="field">
+                    <label for="signupEmail">Email Address</label>
+                    <input class="input" type="email" id="signupEmail" name="email" placeholder="you@example.com">
+                    <div class="error-message" data-for="signupEmail"></div>
+                </div>
+                <div class="field">
+                    <label for="signupPhone">Phone Number</label>
+                    <input class="input" type="tel" id="signupPhone" name="phone" placeholder="+91 98765 43210">
+                </div>
+            </div>
 
-    </main>
+            <div class="two-col">
+                <div class="field">
+                    <label for="signupCity">City</label>
+                    <input class="input" type="text" id="signupCity" name="city" placeholder="Pune">
+                </div>
+                <div class="field">
+                    <label for="signupCountry">Country</label>
+                    <input class="input" type="text" id="signupCountry" name="country" placeholder="India">
+                </div>
+            </div>
 
+            <div class="field">
+                <label for="signupUsername">Username</label>
+                <input class="input" type="text" id="signupUsername" name="username"
+                       placeholder="leave blank and we'll build one from your email">
+                <div class="error-message" data-for="signupUsername"></div>
+            </div>
 
-    <!-- JavaScript -->
-    <script
-        src="{{ url_for('static', filename='js/auth.js') }}"
-    ></script>
+            <div class="two-col">
+                <div class="field">
+                    <label for="signupPassword">Password</label>
+                    <input class="input" type="password" id="signupPassword" name="password" placeholder="8+ characters">
+                    <div class="error-message" data-for="signupPassword"></div>
+                </div>
+                <div class="field">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input class="input" type="password" id="confirmPassword" name="confirmPassword" placeholder="repeat it">
+                    <div class="error-message" data-for="confirmPassword"></div>
+                </div>
+            </div>
 
+            <button type="submit" class="btn btn-accent btn-block">Register User</button>
+
+        </form>
+
+        <p class="auth-switch">
+            Already have an account? <a href="#" id="showLogin">Login</a>
+        </p>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>
-
 </html>
