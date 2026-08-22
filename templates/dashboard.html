@@ -45,7 +45,13 @@
 
 <form class="toolbar" method="GET" action="{{ url_for('trips.dashboard') }}">
     <input class="input search" type="search" name="q" value="{{ q }}"
-           placeholder="Search cities and countries...">
+           placeholder="Search cities, states and countries...">
+    <select class="input" name="country" onchange="this.form.submit()">
+        <option value="">Filter: All countries</option>
+        {% for c in countries %}
+            <option value="{{ c }}" {{ 'selected' if country == c }}>Filter: {{ c }}</option>
+        {% endfor %}
+    </select>
     <select class="input" name="sort" onchange="this.form.submit()">
         <option value="popularity" {{ 'selected' if sort == 'popularity' }}>Sort by: Popularity</option>
         <option value="name"       {{ 'selected' if sort == 'name' }}>Sort by: Name</option>
@@ -71,7 +77,7 @@
                     {% endif %}
                     <div class="tile-body">
                         <h3>{{ city.name }}</h3>
-                        <p class="muted" style="margin:0 0 6px">{{ city.country }}</p>
+                        <p class="muted" style="margin:0 0 6px">{{ city.region }}</p>
                         <span class="badge">Popularity {{ city.popularity }}</span>
                         <span class="badge badge-accent">{{ "₹" * city.cost_index }}</span>
                     </div>
@@ -79,7 +85,7 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty">No cities matched "{{ q }}".</div>
+        <div class="empty">No cities matched those filters.</div>
     {% endif %}
 </div>
 
